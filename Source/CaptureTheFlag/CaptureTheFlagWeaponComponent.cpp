@@ -10,6 +10,7 @@
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
 #include "Animation/AnimInstance.h"
+#include "Components/SphereComponent.h"
 #include "Engine/LocalPlayer.h"
 #include "Engine/World.h"
 
@@ -19,7 +20,6 @@ UCaptureTheFlagWeaponComponent::UCaptureTheFlagWeaponComponent()
 	// Default offset from the character location for projectiles to spawn
 	MuzzleOffset = FVector(100.0f, 0.0f, 10.0f);
 }
-
 
 void UCaptureTheFlagWeaponComponent::Fire()
 {
@@ -41,10 +41,12 @@ void UCaptureTheFlagWeaponComponent::Fire()
 	
 			//Set Spawn Collision Handling Override
 			FActorSpawnParameters ActorSpawnParams;
-			ActorSpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButDontSpawnIfColliding;
+			ActorSpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
 	
 			// Spawn the projectile at the muzzle
-			World->SpawnActor<ACaptureTheFlagProjectile>(ProjectileClass, SpawnLocation, SpawnRotation, ActorSpawnParams);
+			const ACaptureTheFlagProjectile* Projectile = World->SpawnActor<ACaptureTheFlagProjectile>(ProjectileClass, SpawnLocation, SpawnRotation, ActorSpawnParams);
+			Projectile->GetCollisionComp()->IgnoreActorWhenMoving(Character, true);
+			Projectile->GetCollisionComp()->IgnoreActorWhenMoving(GetOwner(), true);
 		}
 	}
 	
@@ -119,3 +121,4 @@ void UCaptureTheFlagWeaponComponent::EndPlay(const EEndPlayReason::Type EndPlayR
 	// maintain the EndPlay call chain
 	Super::EndPlay(EndPlayReason);
 }
+
