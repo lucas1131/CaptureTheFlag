@@ -35,14 +35,6 @@ ACaptureTheFlagCharacter::ACaptureTheFlagCharacter()
 	Mesh1P->bCastDynamicShadow = false;
 	Mesh1P->CastShadow = false;
 	Mesh1P->SetRelativeLocation(FVector(-30.f, 0.f, -150.f));
-
-	// Create a mesh component that will be used when being viewed from a '3rd person' view (when controlling this pawn)
-	Mesh3P = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("CharacterMesh3P"));
-	Mesh3P->SetOwnerNoSee(true);
-	Mesh3P->SetupAttachment(GetCapsuleComponent());
-	Mesh3P->bCastDynamicShadow = true;
-	Mesh3P->CastShadow = true;
-	Mesh3P->SetRelativeLocation(FVector(-30.f, 0.f, -150.f));
 }
 
 void ACaptureTheFlagCharacter::BeginPlay()
@@ -50,15 +42,17 @@ void ACaptureTheFlagCharacter::BeginPlay()
 	Super::BeginPlay();
 
 	UCharacterAnimInstance* AnimationInstance;
-	if (IsLocallyControlled())
-	{
-		verify((AnimationInstance = Cast<UCharacterAnimInstance>(Mesh1P->GetAnimInstance())) != nullptr);
-	}
-	else
-	{
-		return;
-		// verify((AnimationInstance = Cast<UCharacterAnimInstance>(Mesh3P->GetAnimInstance())) != nullptr);
-	}
+	verify((AnimationInstance = Cast<UCharacterAnimInstance>(Mesh1P->GetAnimInstance())) != nullptr);
+
+	// TODO
+	// if (IsLocallyControlled())
+	// {
+	// 	verify((AnimationInstance = Cast<UCharacterAnimInstance>(Mesh1P->GetAnimInstance())) != nullptr);
+	// }
+	// else
+	// {
+	// 	verify((AnimationInstance = Cast<UCharacterAnimInstance>(Mesh3P->GetAnimInstance())) != nullptr);
+	// }
 
 	if (RifleClass)
 	{
@@ -70,12 +64,16 @@ void ACaptureTheFlagCharacter::BeginPlay()
 		if (RifleWeaponComponent)
 		{
 			RifleWeaponComponent->AttachWeapon(this);
-			AnimationInstance->SetHasRifle(true);
+			// TODO temporary until I fix 3rd person animation
+			if (IsLocallyControlled())
+			{
+				AnimationInstance->SetHasRifle(true);
+			}
 		}
 	}
 	else
 	{
-		AnimationInstance->SetHasRifle(false);
+		//AnimationInstance->SetHasRifle(false);
 	}
 }
 
