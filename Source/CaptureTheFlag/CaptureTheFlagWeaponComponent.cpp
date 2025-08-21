@@ -66,7 +66,7 @@ void UCaptureTheFlagWeaponComponent::Fire()
 	}
 }
 
-bool UCaptureTheFlagWeaponComponent::AttachWeapon(ACaptureTheFlagCharacter* TargetCharacter)
+bool UCaptureTheFlagWeaponComponent::AttachWeapon(ACaptureTheFlagCharacter* TargetCharacter, const bool bIsLocalPlayer)
 {
 	Character = TargetCharacter;
 
@@ -78,7 +78,9 @@ bool UCaptureTheFlagWeaponComponent::AttachWeapon(ACaptureTheFlagCharacter* Targ
 
 	// Attach the weapon to the First Person Character
 	FAttachmentTransformRules AttachmentRules(EAttachmentRule::SnapToTarget, true);
-	AttachToComponent(Character->GetMesh1P(), AttachmentRules, FName(TEXT("GripPoint")));
+
+	USkeletalMeshComponent* Mesh = bIsLocalPlayer ? Character->GetMesh1P() : Character->GetMesh();
+	AttachToComponent(Mesh, AttachmentRules, FName(TEXT("GripPoint")));
 
 	// Set up action bindings
 	if (APlayerController* PlayerController = Cast<APlayerController>(Character->GetController()))

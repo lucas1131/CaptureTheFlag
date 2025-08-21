@@ -41,19 +41,6 @@ void ACaptureTheFlagCharacter::BeginPlay()
 {
 	Super::BeginPlay();
 
-	UCharacterAnimInstance* AnimationInstance;
-	verify((AnimationInstance = Cast<UCharacterAnimInstance>(Mesh1P->GetAnimInstance())) != nullptr);
-
-	// TODO
-	// if (IsLocallyControlled())
-	// {
-	// 	verify((AnimationInstance = Cast<UCharacterAnimInstance>(Mesh1P->GetAnimInstance())) != nullptr);
-	// }
-	// else
-	// {
-	// 	verify((AnimationInstance = Cast<UCharacterAnimInstance>(Mesh3P->GetAnimInstance())) != nullptr);
-	// }
-
 	if (RifleClass)
 	{
 		FActorSpawnParameters Parameters;
@@ -63,17 +50,8 @@ void ACaptureTheFlagCharacter::BeginPlay()
 		UCaptureTheFlagWeaponComponent* RifleWeaponComponent = Rifle->GetComponentByClass<UCaptureTheFlagWeaponComponent>();
 		if (RifleWeaponComponent)
 		{
-			RifleWeaponComponent->AttachWeapon(this);
-			// TODO temporary until I fix 3rd person animation
-			if (IsLocallyControlled())
-			{
-				AnimationInstance->SetHasRifle(true);
-			}
+			RifleWeaponComponent->AttachWeapon(this, IsLocallyControlled());
 		}
-	}
-	else
-	{
-		//AnimationInstance->SetHasRifle(false);
 	}
 }
 
