@@ -1,7 +1,8 @@
 // Copyright Epic Games, Inc. All Rights Reserved.
 
 #include "CaptureTheFlagCharacter.h"
-#include "CaptureTheFlagProjectile.h"
+#include "CharacterAnimInstance.h"
+#include "CaptureTheFlagWeaponComponent.h"
 #include "Animation/AnimInstance.h"
 #include "Camera/CameraComponent.h"
 #include "Components/CapsuleComponent.h"
@@ -34,7 +35,31 @@ ACaptureTheFlagCharacter::ACaptureTheFlagCharacter()
 	Mesh1P->bCastDynamicShadow = false;
 	Mesh1P->CastShadow = false;
 	Mesh1P->SetRelativeLocation(FVector(-30.f, 0.f, -150.f));
+}
 
+void ACaptureTheFlagCharacter::BeginPlay()
+{
+	Super::BeginPlay();
+
+	UCharacterAnimInstance* AnimationInstance;
+	verify((AnimationInstance = Cast<UCharacterAnimInstance>(Mesh1P->GetAnimInstance())) != nullptr);
+
+	if (RifleClass)
+	{
+		FActorSpawnParameters Parameters;
+		Parameters.Owner = this;
+		Parameters.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+		const AActor* Rifle = GetWorld()->SpawnActor<AActor>(RifleClass, FTransform::Identity, Parameters);
+		UCaptureTheFlagWeaponComponent* RifleWeaponComponent = Rifle->GetComponentByClass<UCaptureTheFlagWeaponComponent>();
+		if (RifleWeaponComponent){
+			RifleWeaponComponent->AttachWeapon(this);
+			AnimationInstance->SetHasRifle(true);
+		}
+	}
+	else
+	{
+		AnimationInstance->SetHasRifle(false);
+	}
 }
 
 //////////////////////////////////////////////////////////////////////////// Input

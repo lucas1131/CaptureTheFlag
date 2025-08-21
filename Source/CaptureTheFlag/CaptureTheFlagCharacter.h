@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "CaptureTheFlagWeaponComponent.h"
 #include "GameFramework/Character.h"
 #include "Logging/LogMacros.h"
 #include "CaptureTheFlagCharacter.generated.h"
@@ -44,9 +45,14 @@ class ACaptureTheFlagCharacter : public ACharacter
 	/** Look Input Action */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 	class UInputAction* LookAction;
-	
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Weapon, meta = (AllowPrivateAccess = "true"))
+	TSubclassOf<AActor> RifleClass;
+
 public:
 	ACaptureTheFlagCharacter();
+
+	virtual void BeginPlay() override;
 
 protected:
 	/** Called for movement input */
