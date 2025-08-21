@@ -21,7 +21,7 @@ ACaptureTheFlagCharacter::ACaptureTheFlagCharacter()
 {
 	// Set size for collision capsule
 	GetCapsuleComponent()->InitCapsuleSize(55.f, 96.0f);
-		
+
 	// Create a CameraComponent	
 	FirstPersonCameraComponent = CreateDefaultSubobject<UCameraComponent>(TEXT("FirstPersonCamera"));
 	FirstPersonCameraComponent->SetupAttachment(GetCapsuleComponent());
@@ -35,6 +35,14 @@ ACaptureTheFlagCharacter::ACaptureTheFlagCharacter()
 	Mesh1P->bCastDynamicShadow = false;
 	Mesh1P->CastShadow = false;
 	Mesh1P->SetRelativeLocation(FVector(-30.f, 0.f, -150.f));
+
+	// Create a mesh component that will be used when being viewed from a '3rd person' view (when controlling this pawn)
+	Mesh3P = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("CharacterMesh3P"));
+	Mesh3P->SetOwnerNoSee(true);
+	Mesh3P->SetupAttachment(GetCapsuleComponent());
+	Mesh3P->bCastDynamicShadow = true;
+	Mesh3P->CastShadow = true;
+	Mesh3P->SetRelativeLocation(FVector(-30.f, 0.f, -150.f));
 }
 
 void ACaptureTheFlagCharacter::BeginPlay()
@@ -42,7 +50,15 @@ void ACaptureTheFlagCharacter::BeginPlay()
 	Super::BeginPlay();
 
 	UCharacterAnimInstance* AnimationInstance;
-	verify((AnimationInstance = Cast<UCharacterAnimInstance>(Mesh1P->GetAnimInstance())) != nullptr);
+	if (IsLocallyControlled())
+	{
+		verify((AnimationInstance = Cast<UCharacterAnimInstance>(Mesh1P->GetAnimInstance())) != nullptr);
+	}
+	else
+	{
+		return;
+		// verify((AnimationInstance = Cast<UCharacterAnimInstance>(Mesh3P->GetAnimInstance())) != nullptr);
+	}
 
 	if (RifleClass)
 	{
@@ -51,7 +67,8 @@ void ACaptureTheFlagCharacter::BeginPlay()
 		Parameters.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
 		const AActor* Rifle = GetWorld()->SpawnActor<AActor>(RifleClass, FTransform::Identity, Parameters);
 		UCaptureTheFlagWeaponComponent* RifleWeaponComponent = Rifle->GetComponentByClass<UCaptureTheFlagWeaponComponent>();
-		if (RifleWeaponComponent){
+		if (RifleWeaponComponent)
+		{
 			RifleWeaponComponent->AttachWeapon(this);
 			AnimationInstance->SetHasRifle(true);
 		}
@@ -71,7 +88,8 @@ void ACaptureTheFlagCharacter::NotifyControllerChanged()
 	// Add Input Mapping Context
 	if (APlayerController* PlayerController = Cast<APlayerController>(Controller))
 	{
-		if (UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(PlayerController->GetLocalPlayer()))
+		if (UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(
+			PlayerController->GetLocalPlayer()))
 		{
 			Subsystem->AddMappingContext(DefaultMappingContext, 0);
 		}
@@ -79,7 +97,7 @@ void ACaptureTheFlagCharacter::NotifyControllerChanged()
 }
 
 void ACaptureTheFlagCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
-{	
+{
 	// Set up action bindings
 	if (UEnhancedInputComponent* EnhancedInputComponent = Cast<UEnhancedInputComponent>(PlayerInputComponent))
 	{
@@ -95,7 +113,10 @@ void ACaptureTheFlagCharacter::SetupPlayerInputComponent(UInputComponent* Player
 	}
 	else
 	{
-		UE_LOG(LogTemplateCharacter, Error, TEXT("'%s' Failed to find an Enhanced Input Component! This template is built to use the Enhanced Input system. If you intend to use the legacy system, then you will need to update this C++ file."), *GetNameSafe(this));
+		UE_LOG(LogTemplateCharacter, Error,
+		       TEXT(
+			       "'%s' Failed to find an Enhanced Input Component! This template is built to use the Enhanced Input system. If you intend to use the legacy system, then you will need to update this C++ file."
+		       ), *GetNameSafe(this));
 	}
 }
 
