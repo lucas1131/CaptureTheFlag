@@ -54,6 +54,15 @@ void ACaptureTheFlagGameMode::PostLogin(APlayerController* NewPlayer)
 {
 	Super::PostLogin(NewPlayer);
 
+	const int CurrentPlayerNum = TeamsMap[EPlayerTeam::Blue].NumPlayers + TeamsMap[EPlayerTeam::Red].NumPlayers;
+	if (CurrentPlayerNum >= MaxPlayers)
+	{
+		APawn* Pawn = NewPlayer->GetPawn();
+		NewPlayer->StartSpectatingOnly();
+		Pawn->Destroy();
+		return;
+	}
+
 	if (TeamsMap[EPlayerTeam::Blue].NumPlayers < TeamsMap[EPlayerTeam::Red].NumPlayers)
 	{
 		NewPlayer->GetPlayerState<ACaptureTheFlagPlayerState>()->SetTeam(EPlayerTeam::Blue);

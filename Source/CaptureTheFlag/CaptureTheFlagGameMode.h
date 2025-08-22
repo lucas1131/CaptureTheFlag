@@ -27,6 +27,12 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="CTF: Teams")
 	TMap<EPlayerTeam, FTeamData> TeamsMap;
 
+	/*
+	 * Should be even so teams are correctly balanced.
+	 */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="CTF: Players")
+	int MaxPlayers = 6;
+
 private:
 	bool bIsPlayerStartCached;
 
