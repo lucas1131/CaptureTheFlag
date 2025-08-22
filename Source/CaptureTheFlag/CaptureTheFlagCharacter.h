@@ -3,8 +3,10 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "CaptureTheFlagFlagActor.h"
 #include "CaptureTheFlagWeaponComponent.h"
 #include "GameFramework/Character.h"
+#include "GameFramework/SpringArmComponent.h"
 #include "Logging/LogMacros.h"
 #include "CaptureTheFlagCharacter.generated.h"
 
@@ -49,10 +51,22 @@ class ACaptureTheFlagCharacter : public ACharacter
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Weapon, meta = (AllowPrivateAccess = "true"))
 	TSubclassOf<AActor> RifleClass;
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+	USpringArmComponent* FlagArm;
+
+private:
+	UPROPERTY()
+	ACaptureTheFlagFlagActor* GrabbedFlag;
+
 public:
 	ACaptureTheFlagCharacter();
 
 	virtual void BeginPlay() override;
+
+	UFUNCTION(BlueprintCallable)
+	void GrabFlag(ACaptureTheFlagFlagActor* PickingFlag);
+	UFUNCTION(BlueprintCallable)
+	void DropFlag();
 
 protected:
 	/** Called for movement input */

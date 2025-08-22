@@ -23,12 +23,15 @@ protected:
 	UStaticMeshComponent* Flag;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Materials)
-	TMap<EPlayerTeam, FColor> FlagColors;
+	TMap<EPlayerTeam, FLinearColor> FlagColors;
+
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Materials)
 	UMaterialInterface* FlagMaterial;
 
 private:
+	UPROPERTY(ReplicatedUsing=OnRep_Color)
+	FLinearColor CurrentColor;
 	UPROPERTY()
 	class UMaterialInstanceDynamic* FlagMaterialInstance;
 	FVector StartingLocation;
@@ -36,10 +39,16 @@ private:
 public:
 	ACaptureTheFlagFlagActor();
 	virtual void BeginPlay() override;
+	void SetFlagMaterialColor() const;
 	void SetFlagColor(EPlayerTeam Team);
 	void ResetFlag();
+	void OnDropped();
+	virtual void GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLifetimeProps) const override;
 
 private:
 	UFUNCTION()
 	void OnOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
+
+	UFUNCTION()
+	void OnRep_Color() const;
 };

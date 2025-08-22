@@ -1,6 +1,8 @@
 // Copyright Epic Games, Inc. All Rights Reserved.
 
 #include "CaptureTheFlagProjectile.h"
+
+#include "CaptureTheFlagCharacter.h"
 #include "GameFramework/ProjectileMovementComponent.h"
 #include "Components/SphereComponent.h"
 
@@ -29,15 +31,32 @@ ACaptureTheFlagProjectile::ACaptureTheFlagProjectile()
 
 	// Die after 3 seconds by default
 	InitialLifeSpan = 3.0f;
+
+	Bounces = 3;
+	Damage = 1;
 }
 
 void ACaptureTheFlagProjectile::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit)
 {
 	// Only add impulse and destroy projectile if we hit a physics
-	if ((OtherActor != nullptr) && (OtherActor != this) && (OtherComp != nullptr) && OtherComp->IsSimulatingPhysics())
+	if ((OtherActor != nullptr) && (OtherComp != nullptr) && OtherComp->IsSimulatingPhysics())
 	{
 		OtherComp->AddImpulseAtLocation(GetVelocity() * 100.0f, GetActorLocation());
+		Destroy();
+		return;
+	}
 
+	// If we hit player
+	if (ACaptureTheFlagCharacter* Character = Cast<ACaptureTheFlagCharacter>(OtherActor))
+	{
+		// Character->TakeDamage(Damage, {}, this, this);
+		Destroy();
+		return;
+	}
+
+	// Hitting anything else, just bounce
+	if (Bounces-- <= 0)
+	{
 		Destroy();
 	}
 }

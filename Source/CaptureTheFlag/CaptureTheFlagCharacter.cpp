@@ -11,6 +11,7 @@
 #include "EnhancedInputSubsystems.h"
 #include "InputActionValue.h"
 #include "Engine/LocalPlayer.h"
+#include "GameFramework/SpringArmComponent.h"
 
 DEFINE_LOG_CATEGORY(LogTemplateCharacter);
 
@@ -35,6 +36,12 @@ ACaptureTheFlagCharacter::ACaptureTheFlagCharacter()
 	Mesh1P->bCastDynamicShadow = false;
 	Mesh1P->CastShadow = false;
 	Mesh1P->SetRelativeLocation(FVector(-30.f, 0.f, -150.f));
+
+	FlagArm = CreateDefaultSubobject<USpringArmComponent>(TEXT("FlagArm"));
+	FlagArm->SetupAttachment(GetCapsuleComponent());
+	FlagArm->TargetArmLength = 200.0f;
+	FlagArm->bDoCollisionTest = false;
+	FlagArm->SetRelativeRotation(FRotator(-90.0f, 0.0f, 0.0f));
 }
 
 void ACaptureTheFlagCharacter::BeginPlay()
@@ -52,6 +59,27 @@ void ACaptureTheFlagCharacter::BeginPlay()
 		{
 			RifleWeaponComponent->AttachWeapon(this, IsLocallyControlled());
 		}
+	}
+}
+
+void ACaptureTheFlagCharacter::GrabFlag(ACaptureTheFlagFlagActor* PickingFlag)
+{
+	const FAttachmentTransformRules SnapLocationOnly(EAttachmentRule::SnapToTarget,
+	                                                 EAttachmentRule::KeepWorld,
+	                                                 EAttachmentRule::KeepWorld,
+	                                                 false);
+	PickingFlag->AttachToComponent(FlagArm, SnapLocationOnly);
+	GrabbedFlag = PickingFlag;
+}
+
+void ACaptureTheFlagCharacter::DropFlag()
+{
+	if (IsValid(GrabbedFlag))
+	{
+		GrabbedFlag->DetachFromActor(FDetachmentTransformRules::KeepWorldTransform);
+		GrabbedFlag->SetActorLocation(GetActorLocation() + GetActorForwardVector()*10);
+		GrabbedFlag->OnDropped();
+		GrabbedFlag = nullptr;
 	}
 }
 

@@ -4,6 +4,7 @@
 #include "CaptureTheFlagCharacter.h"
 #include "CaptureTheFlagPlayerState.h"
 #include "Components/SphereComponent.h"
+#include "Net/UnrealNetwork.h"
 
 ACaptureTheFlagFlagActor::ACaptureTheFlagFlagActor()
 {
@@ -42,18 +43,38 @@ void ACaptureTheFlagFlagActor::BeginPlay()
 	SetFlagColor(EPlayerTeam::Spectator);
 }
 
-void ACaptureTheFlagFlagActor::SetFlagColor(const EPlayerTeam Team)
+void ACaptureTheFlagFlagActor::SetFlagMaterialColor() const
 {
 	if (FlagMaterialInstance)
 	{
-		FlagMaterialInstance->SetVectorParameterValue(FName("Color"), FlagColors[Team]);
+		FlagMaterialInstance->SetVectorParameterValue(FName("Color"), CurrentColor);
 	}
+}
+
+void ACaptureTheFlagFlagActor::SetFlagColor(const EPlayerTeam Team)
+{
+	CurrentColor = FlagColors[Team];
+	SetFlagMaterialColor();
 }
 
 void ACaptureTheFlagFlagActor::ResetFlag()
 {
 	SetActorLocation(StartingLocation);
 	SetFlagColor(EPlayerTeam::Spectator);
+	Collision->Activate();
+}
+
+void ACaptureTheFlagFlagActor::OnDropped()
+{
+	SetFlagColor(EPlayerTeam::Spectator);
+	// Collision->Activate();
+}
+
+void ACaptureTheFlagFlagActor::GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	DOREPLIFETIME(ACaptureTheFlagFlagActor, CurrentColor);
 }
 
 void ACaptureTheFlagFlagActor::OnOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp,
@@ -61,8 +82,18 @@ void ACaptureTheFlagFlagActor::OnOverlap(UPrimitiveComponent* OverlappedComponen
 {
 	if (ACaptureTheFlagCharacter* Character = Cast<ACaptureTheFlagCharacter>(OtherActor))
 	{
-		const EPlayerTeam Team = Character->GetPlayerState<ACaptureTheFlagPlayerState>()->GetTeam();
-		Character->GrabFlag(this);
-		SetFlagColor(Team);
+		const ACaptureTheFlagPlayerState* PlayerState = Character->GetPlayerState<ACaptureTheFlagPlayerState>();
+		if (IsValid(PlayerState))
+		{
+			const EPlayerTeam Team = PlayerState->GetTeam();
+			Character->GrabFlag(this);
+			Collision->Deactivate();
+			SetFlagColor(Team);
+		}
 	}
+}
+
+void ACaptureTheFlagFlagActor::OnRep_Color() const
+{
+	SetFlagMaterialColor();
 }

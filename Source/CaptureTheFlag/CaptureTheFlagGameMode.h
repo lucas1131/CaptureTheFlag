@@ -12,7 +12,7 @@ USTRUCT(BlueprintType)
 struct FTeamData
 {
 	GENERATED_BODY()
-	
+
 	int Score;
 	int NumPlayers;
 	APlayerStart* Start;
