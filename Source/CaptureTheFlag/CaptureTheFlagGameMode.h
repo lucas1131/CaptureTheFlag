@@ -6,14 +6,38 @@
 #include "GameFramework/GameModeBase.h"
 #include "CaptureTheFlagGameMode.generated.h"
 
+enum class EPlayerTeam : uint8;
+
+USTRUCT(BlueprintType)
+struct FTeamData
+{
+	GENERATED_BODY()
+	
+	int Score;
+	int NumPlayers;
+	APlayerStart* Start;
+};
+
 UCLASS(minimalapi)
 class ACaptureTheFlagGameMode : public AGameModeBase
 {
 	GENERATED_BODY()
 
+protected:
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="CTF: Teams")
+	TMap<EPlayerTeam, FTeamData> TeamsMap;
+
+private:
+	bool bIsPlayerStartCached;
+
 public:
 	ACaptureTheFlagGameMode();
+
+private:
+	virtual void InitGame(const FString& MapName, const FString& Options, FString& ErrorMessage) override;
+	virtual void PostLogin(APlayerController* NewPlayer) override;
+	virtual void Logout(AController* ExitingPlayer) override;
+
+	static void SetPlayerLocationAt(AController* Player, const APlayerStart* PlayerStart);
+	void ResetGame();
 };
-
-
-
