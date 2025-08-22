@@ -15,7 +15,7 @@ ACaptureTheFlagGameMode::ACaptureTheFlagGameMode() : Super(), bIsPlayerStartCach
 	DefaultPawnClass = PlayerPawnClassFinder.Class;
 	PlayerStateClass = ACaptureTheFlagPlayerState::StaticClass();
 
-	TeamsMap.Add(EPlayerTeam::None, FTeamData()); // In case I decide later I want to use None as spectator
+	TeamsMap.Add(EPlayerTeam::Spectator, FTeamData());
 	TeamsMap.Add(EPlayerTeam::Blue, FTeamData());
 	TeamsMap.Add(EPlayerTeam::Red, FTeamData());
 }
@@ -40,6 +40,10 @@ void ACaptureTheFlagGameMode::InitGame(const FString& MapName, const FString& Op
 			{
 				TeamsMap[EPlayerTeam::Red].Start = PlayerStart;
 			}
+			else if (PlayerStart->PlayerStartTag == FName("Spectator"))
+			{
+				TeamsMap[EPlayerTeam::Spectator].Start = PlayerStart;
+			}
 			else
 			{
 				UE_LOG(LogTemp, Warning, TEXT("Unknown player start tag '%s' found for object: '%s'"),
@@ -48,6 +52,13 @@ void ACaptureTheFlagGameMode::InitGame(const FString& MapName, const FString& Op
 			}
 		}
 	}
+}
+
+void ACaptureTheFlagGameMode::SetupNewPlayer(APlayerController* NewPlayer, const EPlayerTeam Team)
+{
+	NewPlayer->GetPlayerState<ACaptureTheFlagPlayerState>()->SetTeam(Team);
+	TeamsMap[Team].NumPlayers++;
+	SetPlayerLocationAt(NewPlayer, TeamsMap[Team].Start);
 }
 
 void ACaptureTheFlagGameMode::PostLogin(APlayerController* NewPlayer)
@@ -60,21 +71,15 @@ void ACaptureTheFlagGameMode::PostLogin(APlayerController* NewPlayer)
 		APawn* Pawn = NewPlayer->GetPawn();
 		NewPlayer->StartSpectatingOnly();
 		Pawn->Destroy();
+
+		// TODO Spectator isn't being positioned correctly yet but I consider this lower priority, leaving for later
+		// Solution could be making a spectator pawn subclass that I can set a pending spawn location/rotation via PlayerState so it can position itself 
+		SetupNewPlayer(NewPlayer, EPlayerTeam::Spectator);
 		return;
 	}
 
-	if (TeamsMap[EPlayerTeam::Blue].NumPlayers < TeamsMap[EPlayerTeam::Red].NumPlayers)
-	{
-		NewPlayer->GetPlayerState<ACaptureTheFlagPlayerState>()->SetTeam(EPlayerTeam::Blue);
-		TeamsMap[EPlayerTeam::Blue].NumPlayers++;
-		SetPlayerLocationAt(NewPlayer, TeamsMap[EPlayerTeam::Blue].Start);
-	}
-	else
-	{
-		NewPlayer->GetPlayerState<ACaptureTheFlagPlayerState>()->SetTeam(EPlayerTeam::Red);
-		TeamsMap[EPlayerTeam::Red].NumPlayers++;
-		SetPlayerLocationAt(NewPlayer, TeamsMap[EPlayerTeam::Red].Start);
-	}
+	const bool bBlueTeamHasLessPlayers = TeamsMap[EPlayerTeam::Blue].NumPlayers < TeamsMap[EPlayerTeam::Red].NumPlayers;
+	SetupNewPlayer(NewPlayer, bBlueTeamHasLessPlayers ? EPlayerTeam::Blue : EPlayerTeam::Red);
 }
 
 void ACaptureTheFlagGameMode::Logout(AController* ExitingPlayer)
@@ -89,7 +94,10 @@ void ACaptureTheFlagGameMode::SetPlayerLocationAt(AController* Player, const APl
 	const FVector Location = PlayerStart->GetActorLocation();
 	const FRotator Rotation = PlayerStart->GetActorRotation();
 	Player->SetControlRotation(Rotation);
-	Player->GetPawn()->SetActorLocationAndRotation(Location, Rotation);
+	if(APawn* Pawn = Player->GetPawn())
+	{
+		Pawn->SetActorLocationAndRotation(Location, Rotation);
+	}
 }
 
 void ACaptureTheFlagGameMode::ResetGame()

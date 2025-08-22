@@ -6,7 +6,7 @@
 UENUM(BlueprintType)
 enum class EPlayerTeam : uint8
 {
-	None = 0, // Could maybe be used as spectator
+	Spectator = 0,
 	Blue,
 	Red,
 };
