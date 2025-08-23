@@ -11,22 +11,22 @@ void ACaptureTheFlagPlayerController::BeginPlay()
 {
 	Super::BeginPlay();
 
-	if (IsLocalController())
-	{
-		if (IsValid(HUDClass))
-		{
-			HUDWidget = CreateWidget<UHUDWidget>(this, HUDClass, FName("HUD"));
-			HUDWidget->AddToViewport();
-			HUDWidget->SetScores(0, 0);
-		}
+	// No Setup for remote clients
+	if (!IsLocalController()) return;
 
-		if (IsValid(MatchEndWidgetClass))
-		{
-			MatchEndWidget = CreateWidget<UMatchEndWidget>(this, MatchEndWidgetClass, FName("MatchEndWidget"));
-			MatchEndWidget->AddToViewport();
-			SetupMatchEndWidget();
-			MatchEndWidget->OnBannerAnimationFinished.BindUObject(this, &ACaptureTheFlagPlayerController::StartCountdown);
-		}
+	if (IsValid(HUDClass))
+	{
+		HUDWidget = CreateWidget<UHUDWidget>(this, HUDClass, FName("HUD"));
+		HUDWidget->AddToViewport();
+		HUDWidget->SetScores(0, 0);
+	}
+
+	if (IsValid(MatchEndWidgetClass))
+	{
+		MatchEndWidget = CreateWidget<UMatchEndWidget>(this, MatchEndWidgetClass, FName("MatchEndWidget"));
+		MatchEndWidget->AddToViewport();
+		SetupMatchEndWidget();
+		MatchEndWidget->OnBannerAnimationFinished.BindUObject(this, &ACaptureTheFlagPlayerController::StartCountdown);
 	}
 
 	if (ACaptureTheFlagGameState* State = GetWorld()->GetGameState<ACaptureTheFlagGameState>())

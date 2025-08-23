@@ -141,13 +141,13 @@ void ACaptureTheFlagGameMode::SetupNewPlayer(APlayerController* NewPlayer, const
 {
 	ACaptureTheFlagPlayerState* NewPlayerState = NewPlayer->GetPlayerState<ACaptureTheFlagPlayerState>();
 	NewPlayerState->SetTeam(Team);
+	TeamsMap[Team].NumPlayers++;
 
 	// For now, player name is mostly for debugging since there is no input for player name
 	const int NumPlayers = TeamsMap[EPlayerTeam::Blue].NumPlayers + TeamsMap[EPlayerTeam::Blue].NumPlayers;
-	const FString PlayerName = NewPlayer->HasAuthority() ? TEXT("Host") : FString::Printf(TEXT("Client %d"), NumPlayers);
+	const FString PlayerName = NewPlayer->IsLocalController() ? TEXT("Host") : FString::Printf(TEXT("Client %d"), NumPlayers);
 	NewPlayerState->SetPlayerName(PlayerName); 
 	
-	TeamsMap[Team].NumPlayers++;
 	SetPlayerLocationAt(NewPlayer, TeamsMap[Team].Start);
 
 	if (ACaptureTheFlagCharacter* Character = Cast<ACaptureTheFlagCharacter>(NewPlayer->GetCharacter()))
@@ -181,6 +181,14 @@ void ACaptureTheFlagGameMode::Logout(AController* ExitingPlayer)
 {
 	Super::Logout(ExitingPlayer);
 	const EPlayerTeam Team = ExitingPlayer->GetPlayerState<ACaptureTheFlagPlayerState>()->GetTeam();
+
+	TArray<AActor*> Actors;
+	ExitingPlayer->GetAttachedActors(Actors, true, true);
+	for(AActor* Actor : Actors)
+	{
+		Actor->Destroy();
+	}
+	
 	TeamsMap[Team].NumPlayers--;
 }
 
