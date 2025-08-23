@@ -77,7 +77,17 @@ void ACaptureTheFlagCharacter::DropFlag()
 	if (IsValid(GrabbedFlag))
 	{
 		GrabbedFlag->DetachFromActor(FDetachmentTransformRules::KeepWorldTransform);
-		GrabbedFlag->SetActorLocation(GetActorLocation() + GetActorForwardVector()*10);
+		GrabbedFlag->SetActorLocation(GetActorLocation());
+		GrabbedFlag->OnDropped();
+		GrabbedFlag = nullptr;
+	}
+}
+
+void ACaptureTheFlagCharacter::ReleaseFlag()
+{
+	if (IsValid(GrabbedFlag))
+	{
+		GrabbedFlag->DetachFromActor(FDetachmentTransformRules::KeepWorldTransform);
 		GrabbedFlag->OnDropped();
 		GrabbedFlag = nullptr;
 	}

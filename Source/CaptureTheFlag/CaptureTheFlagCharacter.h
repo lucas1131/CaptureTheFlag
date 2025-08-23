@@ -67,6 +67,12 @@ public:
 	void GrabFlag(ACaptureTheFlagFlagActor* PickingFlag);
 	UFUNCTION(BlueprintCallable)
 	void DropFlag();
+	UFUNCTION(BlueprintCallable)
+	void ReleaseFlag();
+	UFUNCTION(BlueprintCallable)
+	bool IsHoldingFlag() const { return GrabbedFlag != nullptr; }
+
+	ACaptureTheFlagFlagActor* GetHeldFlag() const { return GrabbedFlag; }
 
 protected:
 	/** Called for movement input */

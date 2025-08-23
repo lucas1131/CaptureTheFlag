@@ -2,6 +2,7 @@
 
 #include "CaptureTheFlagGameMode.h"
 
+#include "CaptureTheFlagGameState.h"
 #include "CaptureTheFlagPlayerState.h"
 #include "GameFramework/GameStateBase.h"
 #include "GameFramework/PlayerStart.h"
@@ -14,16 +15,71 @@ ACaptureTheFlagGameMode::ACaptureTheFlagGameMode() : Super(), bIsPlayerStartCach
 	static ConstructorHelpers::FClassFinder<APawn> PlayerPawnClassFinder(TEXT("/Game/FirstPerson/Blueprints/BP_FirstPersonCharacter"));
 	DefaultPawnClass = PlayerPawnClassFinder.Class;
 	PlayerStateClass = ACaptureTheFlagPlayerState::StaticClass();
+	GameStateClass = ACaptureTheFlagGameState::StaticClass();
 
-	TeamsMap.Add(EPlayerTeam::Spectator, FTeamData());
-	TeamsMap.Add(EPlayerTeam::Blue, FTeamData());
-	TeamsMap.Add(EPlayerTeam::Red, FTeamData());
+	TeamsMap.Add(EPlayerTeam::Spectator, FTeamPlayerData());
+	TeamsMap.Add(EPlayerTeam::Blue, FTeamPlayerData());
+	TeamsMap.Add(EPlayerTeam::Red, FTeamPlayerData());
+}
+
+void ACaptureTheFlagGameMode::IncrementScoreForTeam(const EPlayerTeam Team)
+{
+	const int TeamScore = GetGameState<ACaptureTheFlagGameState>()->IncrementScoreForTeam(Team);
+	if (CheckWinConditionForTeam(Team, TeamScore))
+	{
+		// TODO Setup countdown for reset
+		const FString TeamName = Team == EPlayerTeam::Red ? TEXT("Red") : TEXT("Blue");
+		UE_LOG(LogTemp, Log, TEXT("Team %s won"), *TeamName);
+	}
+}
+
+bool ACaptureTheFlagGameMode::CheckWinConditionForTeam(const EPlayerTeam ScoringTeam, const int Score) const
+{
+	if (Score >= ScoreToWin)
+	{
+		ACaptureTheFlagGameState* CTFGameState = GetGameState<ACaptureTheFlagGameState>();
+		
+		for (const TObjectPtr<APlayerState> PlayerState : CTFGameState->PlayerArray)
+		{
+			if (ACaptureTheFlagPlayerState* CTFPlayerState = Cast<ACaptureTheFlagPlayerState>(PlayerState))
+			{
+				if (CTFPlayerState->GetTeam() == ScoringTeam)
+				{
+					CTFPlayerState->SetWinnerState(EMatchState::Win);
+				}
+				else if (CTFPlayerState->GetTeam() != EPlayerTeam::Spectator)
+				{
+					CTFPlayerState->SetWinnerState(EMatchState::Lose);
+				}
+				// TODO what to show to spectators? low priority for now
+			}
+		}
+
+		return true;
+	}
+
+	return false;
+}
+
+void ACaptureTheFlagGameMode::ResetGame()
+{
+	ACaptureTheFlagGameState* CTFGameState = GetGameState<ACaptureTheFlagGameState>();
+	CTFGameState->ResetScores();
+	
+	for (const TObjectPtr<APlayerState> PlayerState : CTFGameState->PlayerArray)
+	{
+		if (const ACaptureTheFlagPlayerState* CTFPlayerState = Cast<ACaptureTheFlagPlayerState>(PlayerState))
+		{
+			const EPlayerTeam PlayerTeam = CTFPlayerState->GetTeam();
+			PlayerState->GetPawn()->SetActorLocation(TeamsMap[PlayerTeam].Start->GetActorLocation());
+		}
+	}
 }
 
 void ACaptureTheFlagGameMode::InitGame(const FString& MapName, const FString& Options, FString& ErrorMessage)
 {
 	Super::InitGame(MapName, Options, ErrorMessage);
-
+	
 	TArray<AActor*> WorldActors;
 	UGameplayStatics::GetAllActorsOfClass(GetWorld(), APlayerStart::StaticClass(), WorldActors);
 
@@ -100,17 +156,3 @@ void ACaptureTheFlagGameMode::SetPlayerLocationAt(AController* Player, const APl
 	}
 }
 
-void ACaptureTheFlagGameMode::ResetGame()
-{
-	TeamsMap[EPlayerTeam::Blue].Score = 0;
-	TeamsMap[EPlayerTeam::Red].Score = 0;
-
-	for (const TObjectPtr<APlayerState> PlayerState : GetGameState<AGameStateBase>()->PlayerArray)
-	{
-		if (const ACaptureTheFlagPlayerState* CTFPlayerState = Cast<ACaptureTheFlagPlayerState>(PlayerState))
-		{
-			const EPlayerTeam PlayerTeam = CTFPlayerState->GetTeam();
-			PlayerState->GetPawn()->SetActorLocation(TeamsMap[PlayerTeam].Start->GetActorLocation());
-		}
-	}
-}

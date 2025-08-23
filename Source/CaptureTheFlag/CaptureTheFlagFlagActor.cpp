@@ -12,6 +12,7 @@ ACaptureTheFlagFlagActor::ACaptureTheFlagFlagActor()
 
 	Collision = CreateDefaultSubobject<USphereComponent>(TEXT("PickupCollision"));
 	Collision->InitSphereRadius(60.0f);
+	Collision->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
 	Collision->BodyInstance.SetCollisionProfileName("OverlapOnlyPawn");
 	Collision->OnComponentBeginOverlap.AddDynamic(this, &ACaptureTheFlagFlagActor::OnOverlap);
 	RootComponent = Collision;
@@ -61,13 +62,13 @@ void ACaptureTheFlagFlagActor::ResetFlag()
 {
 	SetActorLocation(StartingLocation);
 	SetFlagColor(EPlayerTeam::Spectator);
-	Collision->Activate();
+	Collision->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
 }
 
 void ACaptureTheFlagFlagActor::OnDropped()
 {
 	SetFlagColor(EPlayerTeam::Spectator);
-	// Collision->Activate();
+	Collision->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
 }
 
 void ACaptureTheFlagFlagActor::GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLifetimeProps) const
@@ -87,7 +88,7 @@ void ACaptureTheFlagFlagActor::OnOverlap(UPrimitiveComponent* OverlappedComponen
 		{
 			const EPlayerTeam Team = PlayerState->GetTeam();
 			Character->GrabFlag(this);
-			Collision->Deactivate();
+			Collision->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 			SetFlagColor(Team);
 		}
 	}
