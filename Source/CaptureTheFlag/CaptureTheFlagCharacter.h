@@ -61,7 +61,9 @@ private:
 	UMaterialInstanceDynamic* DynamicMesh1PMat;
 	UPROPERTY()
 	UMaterialInstanceDynamic* DynamicMesh3PMat;
-
+	UPROPERTY(ReplicatedUsing=OnRep_SetMaterialTint)
+	FLinearColor PlayerTint;
+	
 public:
 	ACaptureTheFlagCharacter();
 
@@ -78,7 +80,12 @@ public:
 
 	ACaptureTheFlagFlagActor* GetHeldFlag() const { return GrabbedFlag; }
 
-	void SetMaterialTint(FLinearColor Color) const;
+	UFUNCTION()
+	void SetPlayerTint(const FLinearColor Color)
+	{
+		PlayerTint = Color;
+		ApplyPlayerTint();
+	}
 
 protected:
 	/** Called for movement input */
@@ -93,11 +100,18 @@ protected:
 	virtual void SetupPlayerInputComponent(UInputComponent* InputComponent) override;
 	// End of APawn interface
 
+	virtual void GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLifetimeProps) const override;
+
 public:
 	/** Returns Mesh1P subobject **/
 	USkeletalMeshComponent* GetMesh1P() const { return Mesh1P; }
 	/** Returns FirstPersonCameraComponent subobject **/
 	UCameraComponent* GetFirstPersonCameraComponent() const { return FirstPersonCameraComponent; }
 
+private:
+	void ApplyPlayerTint();
+	
+	UFUNCTION()
+	void OnRep_SetMaterialTint();
 };
 

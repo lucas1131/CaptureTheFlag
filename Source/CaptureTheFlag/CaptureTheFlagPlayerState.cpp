@@ -31,3 +31,4 @@ void ACaptureTheFlagPlayerState::OnRep_SetWinState()
 		Lose();
 	}
 }
+

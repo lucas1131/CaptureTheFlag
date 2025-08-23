@@ -1,7 +1,6 @@
 // Copyright Epic Games, Inc. All Rights Reserved.
 
 #include "CaptureTheFlagCharacter.h"
-#include "CharacterAnimInstance.h"
 #include "CaptureTheFlagWeaponComponent.h"
 #include "Animation/AnimInstance.h"
 #include "Camera/CameraComponent.h"
@@ -12,6 +11,7 @@
 #include "InputActionValue.h"
 #include "Engine/LocalPlayer.h"
 #include "GameFramework/SpringArmComponent.h"
+#include "Net/UnrealNetwork.h"
 
 DEFINE_LOG_CATEGORY(LogTemplateCharacter);
 
@@ -42,14 +42,13 @@ ACaptureTheFlagCharacter::ACaptureTheFlagCharacter()
 	FlagArm->TargetArmLength = 200.0f;
 	FlagArm->bDoCollisionTest = false;
 	FlagArm->SetRelativeRotation(FRotator(-90.0f, 0.0f, 0.0f));
+
+	PlayerTint = FLinearColor::White;
 }
 
 void ACaptureTheFlagCharacter::BeginPlay()
 {
 	Super::BeginPlay();
-
-	DynamicMesh1PMat = Mesh1P->CreateAndSetMaterialInstanceDynamic(0);
-	DynamicMesh3PMat = GetMesh()->CreateAndSetMaterialInstanceDynamic(0);
 
 	if (RifleClass)
 	{
@@ -63,6 +62,13 @@ void ACaptureTheFlagCharacter::BeginPlay()
 			RifleWeaponComponent->AttachWeapon(this, IsLocallyControlled());
 		}
 	}
+}
+
+void ACaptureTheFlagCharacter::GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	DOREPLIFETIME(ACaptureTheFlagCharacter, PlayerTint);
 }
 
 void ACaptureTheFlagCharacter::GrabFlag(ACaptureTheFlagFlagActor* PickingFlag)
@@ -137,13 +143,6 @@ void ACaptureTheFlagCharacter::SetupPlayerInputComponent(UInputComponent* Player
 	}
 }
 
-
-void ACaptureTheFlagCharacter::SetMaterialTint(const FLinearColor Color) const
-{
-	if (IsValid(DynamicMesh1PMat)) DynamicMesh1PMat->SetVectorParameterValue(FName("Tint"), Color);
-	if (IsValid(DynamicMesh3PMat)) DynamicMesh3PMat->SetVectorParameterValue(FName("Tint"), Color);
-}
-
 void ACaptureTheFlagCharacter::Move(const FInputActionValue& Value)
 {
 	// input is a Vector2D
@@ -168,4 +167,18 @@ void ACaptureTheFlagCharacter::Look(const FInputActionValue& Value)
 		AddControllerYawInput(LookAxisVector.X);
 		AddControllerPitchInput(LookAxisVector.Y);
 	}
+}
+
+void ACaptureTheFlagCharacter::ApplyPlayerTint()
+{
+	if (!IsValid(DynamicMesh1PMat)) DynamicMesh1PMat = Mesh1P->CreateAndSetMaterialInstanceDynamic(0);
+	if (!IsValid(DynamicMesh3PMat)) DynamicMesh3PMat = GetMesh()->CreateAndSetMaterialInstanceDynamic(0);
+
+	DynamicMesh1PMat->SetVectorParameterValue(FName("Tint"), PlayerTint);
+	DynamicMesh3PMat->SetVectorParameterValue(FName("Tint"), PlayerTint);
+}
+
+void ACaptureTheFlagCharacter::OnRep_SetMaterialTint()
+{
+	ApplyPlayerTint();
 }

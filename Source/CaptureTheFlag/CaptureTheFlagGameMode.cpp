@@ -24,7 +24,7 @@ ACaptureTheFlagGameMode::ACaptureTheFlagGameMode() : Super(), bIsPlayerStartCach
 	TeamsMap.Add(EPlayerTeam::Blue, FTeamPlayerData());
 	TeamsMap.Add(EPlayerTeam::Red, FTeamPlayerData());
 
-	TeamColors.Add(EPlayerTeam::Spectator, FColor(255, 255, 255));
+	TeamColors.Add(EPlayerTeam::Spectator, FColor::White);
 	TeamColors.Add(EPlayerTeam::Red, FColor(255, 20.4, 12.75));
 	TeamColors.Add(EPlayerTeam::Blue, FColor(20.4, 50, 255));
 }
@@ -124,12 +124,10 @@ void ACaptureTheFlagGameMode::SetupNewPlayer(APlayerController* NewPlayer, const
 	NewPlayerState->SetTeam(Team);
 	TeamsMap[Team].NumPlayers++;
 	SetPlayerLocationAt(NewPlayer, TeamsMap[Team].Start);
-	if (ACharacter* RawCharacter = NewPlayer->GetCharacter())
+
+	if (ACaptureTheFlagCharacter* Character = Cast<ACaptureTheFlagCharacter>(NewPlayer->GetCharacter()))
 	{
-		if (const ACaptureTheFlagCharacter* Character = Cast<ACaptureTheFlagCharacter>(RawCharacter))
-		{
-			Character->SetMaterialTint(GetTeamColor(Team));
-		}
+		Character->SetPlayerTint(TeamColors[Team]);
 	}
 }
 
