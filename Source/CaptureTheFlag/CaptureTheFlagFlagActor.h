@@ -23,10 +23,6 @@ protected:
 	UStaticMeshComponent* Flag;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Materials)
-	TMap<EPlayerTeam, FLinearColor> FlagColors;
-
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Materials)
 	UMaterialInterface* FlagMaterial;
 
 private:

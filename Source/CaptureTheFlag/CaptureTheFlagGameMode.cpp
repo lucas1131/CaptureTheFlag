@@ -2,7 +2,9 @@
 
 #include "CaptureTheFlagGameMode.h"
 
+#include "CaptureTheFlagCharacter.h"
 #include "CaptureTheFlagGameState.h"
+#include "CaptureTheFlagPlayerController.h"
 #include "CaptureTheFlagPlayerState.h"
 #include "GameFramework/GameStateBase.h"
 #include "GameFramework/PlayerStart.h"
@@ -16,10 +18,15 @@ ACaptureTheFlagGameMode::ACaptureTheFlagGameMode() : Super(), bIsPlayerStartCach
 	DefaultPawnClass = PlayerPawnClassFinder.Class;
 	PlayerStateClass = ACaptureTheFlagPlayerState::StaticClass();
 	GameStateClass = ACaptureTheFlagGameState::StaticClass();
+	PlayerControllerClass = ACaptureTheFlagPlayerController::StaticClass();
 
 	TeamsMap.Add(EPlayerTeam::Spectator, FTeamPlayerData());
 	TeamsMap.Add(EPlayerTeam::Blue, FTeamPlayerData());
 	TeamsMap.Add(EPlayerTeam::Red, FTeamPlayerData());
+
+	TeamColors.Add(EPlayerTeam::Spectator, FColor(255, 255, 255));
+	TeamColors.Add(EPlayerTeam::Red, FColor(255, 20.4, 12.75));
+	TeamColors.Add(EPlayerTeam::Blue, FColor(20.4, 50, 255));
 }
 
 void ACaptureTheFlagGameMode::IncrementScoreForTeam(const EPlayerTeam Team)
@@ -27,9 +34,10 @@ void ACaptureTheFlagGameMode::IncrementScoreForTeam(const EPlayerTeam Team)
 	const int TeamScore = GetGameState<ACaptureTheFlagGameState>()->IncrementScoreForTeam(Team);
 	if (CheckWinConditionForTeam(Team, TeamScore))
 	{
-		// TODO Setup countdown for reset
 		const FString TeamName = Team == EPlayerTeam::Red ? TEXT("Red") : TEXT("Blue");
 		UE_LOG(LogTemp, Log, TEXT("Team %s won"), *TeamName);
+		// TODO Setup countdown for reset
+		ResetGame();
 	}
 }
 
@@ -112,9 +120,17 @@ void ACaptureTheFlagGameMode::InitGame(const FString& MapName, const FString& Op
 
 void ACaptureTheFlagGameMode::SetupNewPlayer(APlayerController* NewPlayer, const EPlayerTeam Team)
 {
-	NewPlayer->GetPlayerState<ACaptureTheFlagPlayerState>()->SetTeam(Team);
+	ACaptureTheFlagPlayerState* NewPlayerState = NewPlayer->GetPlayerState<ACaptureTheFlagPlayerState>();
+	NewPlayerState->SetTeam(Team);
 	TeamsMap[Team].NumPlayers++;
 	SetPlayerLocationAt(NewPlayer, TeamsMap[Team].Start);
+	if (ACharacter* RawCharacter = NewPlayer->GetCharacter())
+	{
+		if (const ACaptureTheFlagCharacter* Character = Cast<ACaptureTheFlagCharacter>(RawCharacter))
+		{
+			Character->SetMaterialTint(GetTeamColor(Team));
+		}
+	}
 }
 
 void ACaptureTheFlagGameMode::PostLogin(APlayerController* NewPlayer)

@@ -2,6 +2,7 @@
 #include "CaptureTheFlagFlagActor.h"
 
 #include "CaptureTheFlagCharacter.h"
+#include "CaptureTheFlagGameMode.h"
 #include "CaptureTheFlagPlayerState.h"
 #include "Components/SphereComponent.h"
 #include "Net/UnrealNetwork.h"
@@ -27,10 +28,6 @@ ACaptureTheFlagFlagActor::ACaptureTheFlagFlagActor()
 	Flag->SetCollisionProfileName(FName("NoCollision"));
 	Flag->CastShadow = false;
 
-	FlagColors.Add(EPlayerTeam::Spectator, FColor(255, 255, 255));
-	FlagColors.Add(EPlayerTeam::Red, FColor(255, 20.4, 12.75));
-	FlagColors.Add(EPlayerTeam::Blue, FColor(20.4, 50, 255));
-
 	SetFlagColor(EPlayerTeam::Spectator);
 }
 
@@ -54,8 +51,11 @@ void ACaptureTheFlagFlagActor::SetFlagMaterialColor() const
 
 void ACaptureTheFlagFlagActor::SetFlagColor(const EPlayerTeam Team)
 {
-	CurrentColor = FlagColors[Team];
-	SetFlagMaterialColor();
+	if (ACaptureTheFlagGameMode* GameMode = GetWorld()->GetAuthGameMode<ACaptureTheFlagGameMode>())
+	{
+		CurrentColor = GameMode->GetTeamColor(Team);
+		SetFlagMaterialColor();
+	}
 }
 
 void ACaptureTheFlagFlagActor::ResetFlag()

@@ -39,6 +39,9 @@ protected:
 
 private:
 	bool bIsPlayerStartCached;
+	
+	UPROPERTY(EditAnywhere, Category="CTF: Players")
+	TMap<EPlayerTeam, FLinearColor> TeamColors;
 
 public:
 	ACaptureTheFlagGameMode();
@@ -46,6 +49,8 @@ public:
 	void IncrementScoreForTeam(EPlayerTeam Team);
 	bool CheckWinConditionForTeam(EPlayerTeam ScoringTeam, int Score) const;
 	void ResetGame();
+
+	FLinearColor GetTeamColor(const EPlayerTeam Team) { return TeamColors[Team]; }
 
 private:
 	virtual void InitGame(const FString& MapName, const FString& Options, FString& ErrorMessage) override;

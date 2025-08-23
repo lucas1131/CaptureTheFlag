@@ -57,6 +57,10 @@ class ACaptureTheFlagCharacter : public ACharacter
 private:
 	UPROPERTY()
 	ACaptureTheFlagFlagActor* GrabbedFlag;
+	UPROPERTY()
+	UMaterialInstanceDynamic* DynamicMesh1PMat;
+	UPROPERTY()
+	UMaterialInstanceDynamic* DynamicMesh3PMat;
 
 public:
 	ACaptureTheFlagCharacter();
@@ -73,6 +77,8 @@ public:
 	bool IsHoldingFlag() const { return GrabbedFlag != nullptr; }
 
 	ACaptureTheFlagFlagActor* GetHeldFlag() const { return GrabbedFlag; }
+
+	void SetMaterialTint(FLinearColor Color) const;
 
 protected:
 	/** Called for movement input */

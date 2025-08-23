@@ -36,6 +36,9 @@ ACaptureTheFlagCharacter::ACaptureTheFlagCharacter()
 	Mesh1P->bCastDynamicShadow = false;
 	Mesh1P->CastShadow = false;
 	Mesh1P->SetRelativeLocation(FVector(-30.f, 0.f, -150.f));
+	
+	DynamicMesh1PMat = Mesh1P->CreateAndSetMaterialInstanceDynamic(0);
+	DynamicMesh3PMat = GetMesh()->CreateAndSetMaterialInstanceDynamic(0);
 
 	FlagArm = CreateDefaultSubobject<USpringArmComponent>(TEXT("FlagArm"));
 	FlagArm->SetupAttachment(GetCapsuleComponent());
@@ -134,6 +137,12 @@ void ACaptureTheFlagCharacter::SetupPlayerInputComponent(UInputComponent* Player
 	}
 }
 
+
+void ACaptureTheFlagCharacter::SetMaterialTint(const FLinearColor Color) const
+{
+	DynamicMesh1PMat->SetVectorParameterValue(FName("Tint"), Color);
+	DynamicMesh3PMat->SetVectorParameterValue(FName("Tint"), Color);
+}
 
 void ACaptureTheFlagCharacter::Move(const FInputActionValue& Value)
 {
