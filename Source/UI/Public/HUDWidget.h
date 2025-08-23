@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "ScoreWidget.h"
 #include "Blueprint/UserWidget.h"
+#include "Components/TextBlock.h"
 #include "HUDWidget.generated.h"
 
 enum class EPlayerTeam : uint8;
