@@ -53,6 +53,7 @@ public:
 	FLinearColor GetTeamColor(const EPlayerTeam Team) { return TeamColors[Team]; }
 
 private:
+	virtual void BeginPlay() override;
 	virtual void InitGame(const FString& MapName, const FString& Options, FString& ErrorMessage) override;
 	void SetupNewPlayer(APlayerController* NewPlayer, EPlayerTeam Team);
 	virtual void PostLogin(APlayerController* NewPlayer) override;

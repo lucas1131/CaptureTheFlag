@@ -25,4 +25,7 @@ private:
 
 protected:
 	virtual void BeginPlay() override;
+
+	UFUNCTION()
+	void OnScoreChanged(int BlueTeamScore, int RedTeamScore);
 };

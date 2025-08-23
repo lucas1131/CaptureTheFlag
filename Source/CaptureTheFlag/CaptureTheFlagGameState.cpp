@@ -9,6 +9,7 @@ void ACaptureTheFlagGameState::ResetScores()
 {
 	BlueTeamScore = 0;
 	RedTeamScore = 0;
+	OnScoreChanged.Broadcast(BlueTeamScore, RedTeamScore);
 }
 
 int ACaptureTheFlagGameState::IncrementScoreForTeam(const EPlayerTeam Team)
@@ -19,20 +20,20 @@ int ACaptureTheFlagGameState::IncrementScoreForTeam(const EPlayerTeam Team)
 		return 0;
 	case EPlayerTeam::Blue:
 		BlueTeamScore++;
+		OnScoreChanged.Broadcast(BlueTeamScore, RedTeamScore);
 		return BlueTeamScore;
 	case EPlayerTeam::Red:
 		RedTeamScore++;
+		OnScoreChanged.Broadcast(BlueTeamScore, RedTeamScore);
 		return RedTeamScore;
 	}
 	
 	return 0;
 }
 
-void ACaptureTheFlagGameState::OnRep_UpdateScore()
+void ACaptureTheFlagGameState::OnRep_UpdateScore() const
 {
-	// TODO
-	// ScoreWidget->SetRedTeamScore(RedTeamScore);
-	// ScoreWidget->SetBlueTeamScore(BlueTeamScore);
+	OnScoreChanged.Broadcast(BlueTeamScore, RedTeamScore);
 }
 
 void ACaptureTheFlagGameState::GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLifetimeProps) const

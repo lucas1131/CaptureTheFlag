@@ -16,6 +16,7 @@ public class CaptureTheFlag : ModuleRules
 			"InputCore", 
 			"EnhancedInput",
 			"UMG",
+			"UI",
 		});
 	}
 }

@@ -1,9 +1,8 @@
 ﻿// Fill out your copyright notice in the Description page of Project Settings.
 
-
 #include "CaptureTheFlagPlayerController.h"
 
-#include "CaptureTheFlagPlayerState.h"
+#include "CaptureTheFlagGameState.h"
 #include "HUDWidget.h"
 #include "Blueprint/UserWidget.h"
 
@@ -15,8 +14,19 @@ void ACaptureTheFlagPlayerController::BeginPlay()
 	{
 		HUDWidget = CreateWidget<UHUDWidget>(this, HUDClass, FName("HUD"));
 		HUDWidget->AddToViewport();
+		HUDWidget->SetScores(0, 0);
 	}
-
-	// GetPlayerState<ACaptureTheFlagPlayerState>()
 	
+	if (ACaptureTheFlagGameState* State = GetWorld()->GetGameState<ACaptureTheFlagGameState>())
+	{
+		State->OnScoreChanged.AddUObject(this, &ACaptureTheFlagPlayerController::OnScoreChanged);
+	}
+}
+
+void ACaptureTheFlagPlayerController::OnScoreChanged(int BlueTeamScore, int RedTeamScore)
+{
+	if (IsValid(HUDWidget))
+	{
+		HUDWidget->SetScores(BlueTeamScore, RedTeamScore);
+	}
 }

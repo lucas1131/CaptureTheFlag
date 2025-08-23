@@ -84,6 +84,12 @@ void ACaptureTheFlagGameMode::ResetGame()
 	}
 }
 
+void ACaptureTheFlagGameMode::BeginPlay()
+{
+	Super::BeginPlay();
+	ResetGame();
+}
+
 void ACaptureTheFlagGameMode::InitGame(const FString& MapName, const FString& Options, FString& ErrorMessage)
 {
 	Super::InitGame(MapName, Options, ErrorMessage);
