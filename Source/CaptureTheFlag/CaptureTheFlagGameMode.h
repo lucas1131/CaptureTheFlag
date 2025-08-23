@@ -46,19 +46,22 @@ private:
 public:
 	ACaptureTheFlagGameMode();
 	FLinearColor GetTeamColor(const EPlayerTeam Team) { return TeamColors[Team]; }
+	void IncrementScoreForTeam(EPlayerTeam Team);
 
 private:
 	virtual void BeginPlay() override;
 	virtual void InitGame(const FString& MapName, const FString& Options, FString& ErrorMessage) override;
+
 	void SetupNewPlayer(APlayerController* NewPlayer, EPlayerTeam Team);
 	virtual void PostLogin(APlayerController* NewPlayer) override;
 	virtual void Logout(AController* ExitingPlayer) override;
-
 	static void SetPlayerLocationAt(AController* Player, const APlayerStart* PlayerStart);
-	
-	void IncrementScoreForTeam(EPlayerTeam Team);
+
 	bool CheckWinConditionForTeam(EPlayerTeam ScoringTeam, int Score) const;
-	
+
+	void DestroyAllActorsOfClass(UClass* ActorClass) const;
+	void ResetGameState(ACaptureTheFlagGameState* CTFGameState);
 	void StartGame();
+	void EndGame(EPlayerTeam Team, ACaptureTheFlagGameState* CTFGameState);
 	void ResetGame();
 };

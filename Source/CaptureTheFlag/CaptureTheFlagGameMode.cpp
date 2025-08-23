@@ -6,6 +6,7 @@
 #include "CaptureTheFlagGameState.h"
 #include "CaptureTheFlagPlayerController.h"
 #include "CaptureTheFlagPlayerState.h"
+#include "CaptureTheFlagProjectile.h"
 #include "GameFramework/GameStateBase.h"
 #include "GameFramework/PlayerStart.h"
 #include "Kismet/GameplayStatics.h"
@@ -142,19 +143,7 @@ void ACaptureTheFlagGameMode::IncrementScoreForTeam(const EPlayerTeam Team)
 	
 	if (CheckWinConditionForTeam(Team, TeamScore))
 	{
-		CTFGameState->MulticastOnMatchEnded(Team, TeamColors[Team]);
-		// CTFGameState->OnMatchEnded.ExecuteIfBound(Team, TeamColors[Team]); // Host listen server
-		
-		FTimerHandle ResetTimer;
-		GetWorld()
-			->GetTimerManager()
-			.SetTimer(ResetTimer,
-				FTimerDelegate::CreateLambda([this]()
-				{
-					ResetGame();
-				}),
-				CTFGameState->GetMatchRestartTime()+1, // add a little extra time for visual animations, im not sure how to best handle this yet
-				false); 
+		EndGame(Team, CTFGameState); 
 	}
 }
 
@@ -186,13 +175,18 @@ bool ACaptureTheFlagGameMode::CheckWinConditionForTeam(const EPlayerTeam Scoring
 	return false;
 }
 
-void ACaptureTheFlagGameMode::StartGame()
+void ACaptureTheFlagGameMode::DestroyAllActorsOfClass(UClass* ActorClass) const
 {
+	TArray<AActor*> Actors;
+	UGameplayStatics::GetAllActorsOfClass(GetWorld(), ActorClass, Actors);
+	for (AActor* Actor : Actors)
+	{
+		Actor->Destroy();
+	}
 }
 
-void ACaptureTheFlagGameMode::ResetGame()
+void ACaptureTheFlagGameMode::ResetGameState(ACaptureTheFlagGameState* CTFGameState)
 {
-	ACaptureTheFlagGameState* CTFGameState = GetGameState<ACaptureTheFlagGameState>();
 	CTFGameState->ResetScores();
 	
 	for (const TObjectPtr<APlayerState> PlayerState : CTFGameState->PlayerArray)
@@ -204,6 +198,34 @@ void ACaptureTheFlagGameMode::ResetGame()
 		}
 	}
 
+	// TODO should also reset those physics cubes in scene but that's low priority for now
+}
+
+void ACaptureTheFlagGameMode::StartGame()
+{
+	ACaptureTheFlagGameState* CTFGameState = GetGameState<ACaptureTheFlagGameState>();
+	ResetGameState(CTFGameState);
+	DestroyAllActorsOfClass(ACaptureTheFlagProjectile::StaticClass());
+	CTFGameState->MulticastOnMatchStarted();
+}
+
+void ACaptureTheFlagGameMode::EndGame(const EPlayerTeam Team, ACaptureTheFlagGameState* CTFGameState)
+{
+	CTFGameState->MulticastOnMatchEnded(Team, TeamColors[Team]);
+		
+	FTimerHandle ResetTimer;
+	GetWorld()
+		->GetTimerManager()
+		.SetTimer(ResetTimer,
+		          FTimerDelegate::CreateLambda([this](){ ResetGame(); }),
+		          CTFGameState->GetMatchRestartTime()+1, // add a little extra time for visual animations, im not sure how to best handle this yet
+		          false);
+}
+
+void ACaptureTheFlagGameMode::ResetGame()
+{
+	ACaptureTheFlagGameState* CTFGameState = GetGameState<ACaptureTheFlagGameState>();
+	ResetGameState(CTFGameState);
 	CTFGameState->MulticastOnMatchReset();
 }
 
