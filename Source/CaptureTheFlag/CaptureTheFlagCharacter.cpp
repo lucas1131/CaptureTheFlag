@@ -1,6 +1,8 @@
 // Copyright Epic Games, Inc. All Rights Reserved.
 
 #include "CaptureTheFlagCharacter.h"
+
+#include "BillboardWidgetComponent.h"
 #include "CaptureTheFlagWeaponComponent.h"
 #include "Animation/AnimInstance.h"
 #include "Camera/CameraComponent.h"
@@ -9,6 +11,8 @@
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
 #include "InputActionValue.h"
+#include "Components/BillboardComponent.h"
+#include "Components/WidgetComponent.h"
 #include "Engine/LocalPlayer.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "Net/UnrealNetwork.h"
@@ -44,6 +48,10 @@ ACaptureTheFlagCharacter::ACaptureTheFlagCharacter()
 	FlagArm->SetRelativeRotation(FRotator(-90.0f, 0.0f, 0.0f));
 
 	PlayerTint = FLinearColor::White;
+	// Setup a billboard player name widget
+	PlayerNameWidget = CreateDefaultSubobject<UBillboardWidgetComponent>(TEXT("PlayerNameWidget"));
+	PlayerNameWidget->SetupAttachment(GetCapsuleComponent());
+	PlayerNameWidget->SetTintColorAndOpacity(PlayerTint);
 }
 
 void ACaptureTheFlagCharacter::BeginPlay()
@@ -176,6 +184,8 @@ void ACaptureTheFlagCharacter::ApplyPlayerTint()
 
 	DynamicMesh1PMat->SetVectorParameterValue(FName("Tint"), PlayerTint);
 	DynamicMesh3PMat->SetVectorParameterValue(FName("Tint"), PlayerTint);
+
+	if (IsValid(PlayerNameWidget)) PlayerNameWidget->SetTintColorAndOpacity(PlayerTint);
 }
 
 void ACaptureTheFlagCharacter::OnRep_SetMaterialTint()

@@ -10,6 +10,7 @@
 #include "Logging/LogMacros.h"
 #include "CaptureTheFlagCharacter.generated.h"
 
+class UWidgetComponent;
 class UInputComponent;
 class USkeletalMeshComponent;
 class UCameraComponent;
@@ -63,6 +64,9 @@ private:
 	UMaterialInstanceDynamic* DynamicMesh3PMat;
 	UPROPERTY(ReplicatedUsing=OnRep_SetMaterialTint)
 	FLinearColor PlayerTint;
+	
+	UPROPERTY(EditAnywhere, Category=Player, meta=(AllowPrivateAccess=true))
+	UWidgetComponent* PlayerNameWidget;
 	
 public:
 	ACaptureTheFlagCharacter();
