@@ -31,6 +31,18 @@ int ACaptureTheFlagGameState::IncrementScoreForTeam(const EPlayerTeam Team)
 	return 0;
 }
 
+void ACaptureTheFlagGameState::MulticastOnMatchEnded_Implementation(const EPlayerTeam WinnerTeam, const FLinearColor WinnerColor)
+{
+	// ReSharper disable once CppExpressionWithoutSideEffects
+	OnMatchEnded.ExecuteIfBound(WinnerTeam, WinnerColor);
+}
+
+void ACaptureTheFlagGameState::MulticastOnMatchReset_Implementation()
+{
+	// ReSharper disable once CppExpressionWithoutSideEffects
+	OnMatchReset.ExecuteIfBound();
+}
+
 void ACaptureTheFlagGameState::OnRep_UpdateScore() const
 {
 	OnScoreChanged.Broadcast(BlueTeamScore, RedTeamScore);

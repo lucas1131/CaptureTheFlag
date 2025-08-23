@@ -31,13 +31,24 @@ ACaptureTheFlagGameMode::ACaptureTheFlagGameMode() : Super(), bIsPlayerStartCach
 
 void ACaptureTheFlagGameMode::IncrementScoreForTeam(const EPlayerTeam Team)
 {
-	const int TeamScore = GetGameState<ACaptureTheFlagGameState>()->IncrementScoreForTeam(Team);
+	ACaptureTheFlagGameState* CTFGameState = GetGameState<ACaptureTheFlagGameState>();
+	const int TeamScore = CTFGameState->IncrementScoreForTeam(Team);
+	
 	if (CheckWinConditionForTeam(Team, TeamScore))
 	{
-		const FString TeamName = Team == EPlayerTeam::Red ? TEXT("Red") : TEXT("Blue");
-		UE_LOG(LogTemp, Log, TEXT("Team %s won"), *TeamName);
-		// TODO Setup countdown for reset
-		ResetGame();
+		CTFGameState->MulticastOnMatchEnded(Team, TeamColors[Team]);
+		// CTFGameState->OnMatchEnded.ExecuteIfBound(Team, TeamColors[Team]); // Host listen server
+		
+		FTimerHandle ResetTimer;
+		GetWorld()
+			->GetTimerManager()
+			.SetTimer(ResetTimer,
+				FTimerDelegate::CreateLambda([this]()
+				{
+					ResetGame();
+				}),
+				CTFGameState->GetMatchRestartTime()+1, // add a little extra time for visual animations, im not sure how to best handle this yet
+				false); 
 	}
 }
 
@@ -82,6 +93,8 @@ void ACaptureTheFlagGameMode::ResetGame()
 			PlayerState->GetPawn()->SetActorLocation(TeamsMap[PlayerTeam].Start->GetActorLocation());
 		}
 	}
+
+	CTFGameState->MulticastOnMatchReset();
 }
 
 void ACaptureTheFlagGameMode::BeginPlay()
@@ -128,6 +141,12 @@ void ACaptureTheFlagGameMode::SetupNewPlayer(APlayerController* NewPlayer, const
 {
 	ACaptureTheFlagPlayerState* NewPlayerState = NewPlayer->GetPlayerState<ACaptureTheFlagPlayerState>();
 	NewPlayerState->SetTeam(Team);
+
+	// For now, player name is mostly for debugging since there is no input for player name
+	const int NumPlayers = TeamsMap[EPlayerTeam::Blue].NumPlayers + TeamsMap[EPlayerTeam::Blue].NumPlayers;
+	const FString PlayerName = NewPlayer->HasAuthority() ? TEXT("Host") : FString::Printf(TEXT("Client %d"), NumPlayers);
+	NewPlayerState->SetPlayerName(PlayerName); 
+	
 	TeamsMap[Team].NumPlayers++;
 	SetPlayerLocationAt(NewPlayer, TeamsMap[Team].Start);
 

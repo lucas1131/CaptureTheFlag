@@ -3,6 +3,8 @@
 
 #include "CaptureTheFlagPlayerState.generated.h"
 
+class UWidget;
+
 UENUM(BlueprintType)
 enum class EPlayerTeam : uint8
 {
@@ -29,6 +31,9 @@ private:
 	
 	UPROPERTY(ReplicatedUsing=OnRep_SetWinState)
 	EMatchState WinState = EMatchState::None;
+	
+	UPROPERTY(EditAnywhere, meta=(AllowPrivateAccess=true))
+	UWidget* PlayerNameWidget;
 
 public:
 	EPlayerTeam GetTeam() const { return Team; }
