@@ -17,6 +17,6 @@ void ACaptureTheFlagPlayerController::BeginPlay()
 		HUDWidget->AddToViewport();
 	}
 
-	GetPlayerState<ACaptureTheFlagPlayerState>()
+	// GetPlayerState<ACaptureTheFlagPlayerState>()
 	
 }

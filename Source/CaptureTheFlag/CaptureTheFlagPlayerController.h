@@ -7,6 +7,7 @@
 #include "CaptureTheFlagPlayerController.generated.h"
 
 class UHUDWidget;
+
 /**
  * 
  */

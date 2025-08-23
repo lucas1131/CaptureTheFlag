@@ -51,7 +51,9 @@ void ACaptureTheFlagFlagActor::SetFlagMaterialColor() const
 
 void ACaptureTheFlagFlagActor::SetFlagColor(const EPlayerTeam Team)
 {
-	if (ACaptureTheFlagGameMode* GameMode = GetWorld()->GetAuthGameMode<ACaptureTheFlagGameMode>())
+	const UWorld* World = GetWorld();
+	if (!World) return;
+	if (ACaptureTheFlagGameMode* GameMode = World->GetAuthGameMode<ACaptureTheFlagGameMode>())
 	{
 		CurrentColor = GameMode->GetTeamColor(Team);
 		SetFlagMaterialColor();
