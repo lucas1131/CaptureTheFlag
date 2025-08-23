@@ -37,6 +37,23 @@ void ACaptureTheFlagFlagActor::BeginPlay()
 
 	FlagMaterialInstance = Flag->CreateAndSetMaterialInstanceDynamicFromMaterial(0, FlagMaterial);
 
+	if (ACaptureTheFlagGameState* GameState = GetWorld()->GetGameState<ACaptureTheFlagGameState>())
+	{
+		GameState->OnMatchStarted.AddLambda([this]()
+		{
+			ResetFlag();
+			Pole->SetVisibility(true);
+			Flag->SetVisibility(true);
+		});
+		
+		GameState->OnMatchEnded.AddLambda([this](auto _, auto __)
+		{
+			Collision->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+			Pole->SetVisibility(false);
+			Flag->SetVisibility(false);
+		});
+	}
+
 	StartingLocation = GetActorLocation();
 	SetFlagColor(EPlayerTeam::Spectator);
 }

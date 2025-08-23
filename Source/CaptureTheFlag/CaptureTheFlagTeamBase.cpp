@@ -34,7 +34,7 @@ void ACaptureTheFlagTeamBase::OnOverlap(UPrimitiveComponent* OverlappedComponent
 		{
 			if (ACaptureTheFlagGameMode* GameMode = GetWorld()->GetAuthGameMode<ACaptureTheFlagGameMode>())
 			{
-				GameMode->IncrementScoreForTeam(ActorTeam);				
+				GameMode->IncrementScoreForTeam(ActorTeam);
 			}
 			
 			ACaptureTheFlagFlagActor* Flag = Character->GetHeldFlag();
