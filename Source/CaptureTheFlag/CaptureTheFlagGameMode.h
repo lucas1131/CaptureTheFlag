@@ -45,11 +45,6 @@ private:
 
 public:
 	ACaptureTheFlagGameMode();
-
-	void IncrementScoreForTeam(EPlayerTeam Team);
-	bool CheckWinConditionForTeam(EPlayerTeam ScoringTeam, int Score) const;
-	void ResetGame();
-
 	FLinearColor GetTeamColor(const EPlayerTeam Team) { return TeamColors[Team]; }
 
 private:
@@ -60,4 +55,10 @@ private:
 	virtual void Logout(AController* ExitingPlayer) override;
 
 	static void SetPlayerLocationAt(AController* Player, const APlayerStart* PlayerStart);
+	
+	void IncrementScoreForTeam(EPlayerTeam Team);
+	bool CheckWinConditionForTeam(EPlayerTeam ScoringTeam, int Score) const;
+	
+	void StartGame();
+	void ResetGame();
 };

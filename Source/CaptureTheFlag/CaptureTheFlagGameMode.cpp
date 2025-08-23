@@ -29,78 +29,10 @@ ACaptureTheFlagGameMode::ACaptureTheFlagGameMode() : Super(), bIsPlayerStartCach
 	TeamColors.Add(EPlayerTeam::Blue, FColor(20.4, 50, 255));
 }
 
-void ACaptureTheFlagGameMode::IncrementScoreForTeam(const EPlayerTeam Team)
-{
-	ACaptureTheFlagGameState* CTFGameState = GetGameState<ACaptureTheFlagGameState>();
-	const int TeamScore = CTFGameState->IncrementScoreForTeam(Team);
-	
-	if (CheckWinConditionForTeam(Team, TeamScore))
-	{
-		CTFGameState->MulticastOnMatchEnded(Team, TeamColors[Team]);
-		// CTFGameState->OnMatchEnded.ExecuteIfBound(Team, TeamColors[Team]); // Host listen server
-		
-		FTimerHandle ResetTimer;
-		GetWorld()
-			->GetTimerManager()
-			.SetTimer(ResetTimer,
-				FTimerDelegate::CreateLambda([this]()
-				{
-					ResetGame();
-				}),
-				CTFGameState->GetMatchRestartTime()+1, // add a little extra time for visual animations, im not sure how to best handle this yet
-				false); 
-	}
-}
-
-bool ACaptureTheFlagGameMode::CheckWinConditionForTeam(const EPlayerTeam ScoringTeam, const int Score) const
-{
-	if (Score >= ScoreToWin)
-	{
-		ACaptureTheFlagGameState* CTFGameState = GetGameState<ACaptureTheFlagGameState>();
-		
-		for (const TObjectPtr<APlayerState> PlayerState : CTFGameState->PlayerArray)
-		{
-			if (ACaptureTheFlagPlayerState* CTFPlayerState = Cast<ACaptureTheFlagPlayerState>(PlayerState))
-			{
-				if (CTFPlayerState->GetTeam() == ScoringTeam)
-				{
-					CTFPlayerState->SetWinnerState(EMatchState::Win);
-				}
-				else if (CTFPlayerState->GetTeam() != EPlayerTeam::Spectator)
-				{
-					CTFPlayerState->SetWinnerState(EMatchState::Lose);
-				}
-				// TODO what to show to spectators? low priority for now
-			}
-		}
-
-		return true;
-	}
-
-	return false;
-}
-
-void ACaptureTheFlagGameMode::ResetGame()
-{
-	ACaptureTheFlagGameState* CTFGameState = GetGameState<ACaptureTheFlagGameState>();
-	CTFGameState->ResetScores();
-	
-	for (const TObjectPtr<APlayerState> PlayerState : CTFGameState->PlayerArray)
-	{
-		if (const ACaptureTheFlagPlayerState* CTFPlayerState = Cast<ACaptureTheFlagPlayerState>(PlayerState))
-		{
-			const EPlayerTeam PlayerTeam = CTFPlayerState->GetTeam();
-			PlayerState->GetPawn()->SetActorLocation(TeamsMap[PlayerTeam].Start->GetActorLocation());
-		}
-	}
-
-	CTFGameState->MulticastOnMatchReset();
-}
-
 void ACaptureTheFlagGameMode::BeginPlay()
 {
 	Super::BeginPlay();
-	ResetGame();
+	StartGame();
 }
 
 void ACaptureTheFlagGameMode::InitGame(const FString& MapName, const FString& Options, FString& ErrorMessage)
@@ -202,4 +134,77 @@ void ACaptureTheFlagGameMode::SetPlayerLocationAt(AController* Player, const APl
 		Pawn->SetActorLocationAndRotation(Location, Rotation);
 	}
 }
+
+void ACaptureTheFlagGameMode::IncrementScoreForTeam(const EPlayerTeam Team)
+{
+	ACaptureTheFlagGameState* CTFGameState = GetGameState<ACaptureTheFlagGameState>();
+	const int TeamScore = CTFGameState->IncrementScoreForTeam(Team);
+	
+	if (CheckWinConditionForTeam(Team, TeamScore))
+	{
+		CTFGameState->MulticastOnMatchEnded(Team, TeamColors[Team]);
+		// CTFGameState->OnMatchEnded.ExecuteIfBound(Team, TeamColors[Team]); // Host listen server
+		
+		FTimerHandle ResetTimer;
+		GetWorld()
+			->GetTimerManager()
+			.SetTimer(ResetTimer,
+				FTimerDelegate::CreateLambda([this]()
+				{
+					ResetGame();
+				}),
+				CTFGameState->GetMatchRestartTime()+1, // add a little extra time for visual animations, im not sure how to best handle this yet
+				false); 
+	}
+}
+
+bool ACaptureTheFlagGameMode::CheckWinConditionForTeam(const EPlayerTeam ScoringTeam, const int Score) const
+{
+	if (Score >= ScoreToWin)
+	{
+		ACaptureTheFlagGameState* CTFGameState = GetGameState<ACaptureTheFlagGameState>();
+		
+		for (const TObjectPtr<APlayerState> PlayerState : CTFGameState->PlayerArray)
+		{
+			if (ACaptureTheFlagPlayerState* CTFPlayerState = Cast<ACaptureTheFlagPlayerState>(PlayerState))
+			{
+				if (CTFPlayerState->GetTeam() == ScoringTeam)
+				{
+					CTFPlayerState->SetWinnerState(EMatchState::Win);
+				}
+				else if (CTFPlayerState->GetTeam() != EPlayerTeam::Spectator)
+				{
+					CTFPlayerState->SetWinnerState(EMatchState::Lose);
+				}
+				// TODO what to show to spectators? low priority for now
+			}
+		}
+
+		return true;
+	}
+
+	return false;
+}
+
+void ACaptureTheFlagGameMode::StartGame()
+{
+}
+
+void ACaptureTheFlagGameMode::ResetGame()
+{
+	ACaptureTheFlagGameState* CTFGameState = GetGameState<ACaptureTheFlagGameState>();
+	CTFGameState->ResetScores();
+	
+	for (const TObjectPtr<APlayerState> PlayerState : CTFGameState->PlayerArray)
+	{
+		if (const ACaptureTheFlagPlayerState* CTFPlayerState = Cast<ACaptureTheFlagPlayerState>(PlayerState))
+		{
+			const EPlayerTeam PlayerTeam = CTFPlayerState->GetTeam();
+			PlayerState->GetPawn()->SetActorLocation(TeamsMap[PlayerTeam].Start->GetActorLocation());
+		}
+	}
+
+	CTFGameState->MulticastOnMatchReset();
+}
+
 
