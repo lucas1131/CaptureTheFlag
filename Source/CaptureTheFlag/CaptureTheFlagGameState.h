@@ -5,8 +5,9 @@
 #include "CaptureTheFlagGameState.generated.h"
 
 DECLARE_MULTICAST_DELEGATE_TwoParams(FOnScoreChangedDelegate, int BlueTeamScore, int RedTeamScore);
-DECLARE_DELEGATE_TwoParams(FOnMatchEnded, EPlayerTeam WinnerTeam, FLinearColor WinnerColor);
-DECLARE_DELEGATE(FOnMatchReset);
+DECLARE_MULTICAST_DELEGATE(FOnMatchStarted);
+DECLARE_MULTICAST_DELEGATE_TwoParams(FOnMatchEnded, EPlayerTeam WinnerTeam, FLinearColor WinnerColor);
+DECLARE_MULTICAST_DELEGATE(FOnMatchReset);
 
 UCLASS()
 class ACaptureTheFlagGameState : public AGameStateBase
@@ -15,8 +16,9 @@ class ACaptureTheFlagGameState : public AGameStateBase
 
 public:
 	FOnScoreChangedDelegate OnScoreChanged;
-	FOnMatchReset OnMatchReset;
+	FOnMatchStarted OnMatchStarted;
 	FOnMatchEnded OnMatchEnded;
+	FOnMatchReset OnMatchReset;
 	
 private:
 	UPROPERTY(ReplicatedUsing=OnRep_UpdateScore)
@@ -36,12 +38,16 @@ public:
 	float GetMatchRestartTime() const { return RestartTimeOnMatchEnd; }
 	
 	UFUNCTION(NetMulticast, Reliable)
+	void MulticastOnMatchStarted();
+	void MulticastOnMatchStarted_Implementation() { OnMatchStarted.Broadcast(); }
+	
+	UFUNCTION(NetMulticast, Reliable)
 	void MulticastOnMatchEnded(EPlayerTeam WinnerTeam, FLinearColor WinnerColor);
-	void MulticastOnMatchEnded_Implementation(EPlayerTeam WinnerTeam, FLinearColor WinnerColor);
+	void MulticastOnMatchEnded_Implementation(const EPlayerTeam WinnerTeam, const FLinearColor WinnerColor) { OnMatchEnded.Broadcast(WinnerTeam, WinnerColor); }
 
 	UFUNCTION(NetMulticast, Reliable)
 	void MulticastOnMatchReset();
-	void MulticastOnMatchReset_Implementation();
+	void MulticastOnMatchReset_Implementation() { OnMatchReset.Broadcast(); }
 
 private:
 	UFUNCTION()

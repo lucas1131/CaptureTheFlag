@@ -32,8 +32,8 @@ void ACaptureTheFlagPlayerController::BeginPlay()
 	if (ACaptureTheFlagGameState* State = GetWorld()->GetGameState<ACaptureTheFlagGameState>())
 	{
 		State->OnScoreChanged.AddUObject(this, &ACaptureTheFlagPlayerController::OnScoreChanged);
-		State->OnMatchEnded.BindUObject(this, &ACaptureTheFlagPlayerController::OnMatchEnded);
-		State->OnMatchReset.BindUObject(this, &ACaptureTheFlagPlayerController::OnMatchReset);
+		State->OnMatchEnded.AddUObject(this, &ACaptureTheFlagPlayerController::OnMatchEnded);
+		State->OnMatchReset.AddUObject(this, &ACaptureTheFlagPlayerController::OnMatchReset);
 		MatchRestartTime = State->GetMatchRestartTime();
 	}
 }
