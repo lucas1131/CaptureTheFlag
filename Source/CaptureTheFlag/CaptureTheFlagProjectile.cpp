@@ -3,11 +3,15 @@
 #include "CaptureTheFlagProjectile.h"
 
 #include "CaptureTheFlagCharacter.h"
+#include "CaptureTheFlagPlayerState.h"
 #include "GameFramework/ProjectileMovementComponent.h"
 #include "Components/SphereComponent.h"
 
 ACaptureTheFlagProjectile::ACaptureTheFlagProjectile() 
 {
+	SetReplicates(true);
+	AActor::SetReplicateMovement(true);
+	
 	// Use a sphere as a simple collision representation
 	CollisionComp = CreateDefaultSubobject<USphereComponent>(TEXT("SphereComp"));
 	CollisionComp->InitSphereRadius(5.0f);

@@ -66,10 +66,10 @@ void ACaptureTheFlagCharacter::BeginPlay()
 		Parameters.Owner = this;
 		Parameters.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
 		const AActor* Rifle = GetWorld()->SpawnActor<AActor>(RifleClass, FTransform::Identity, Parameters);
-		UCaptureTheFlagWeaponComponent* RifleWeaponComponent = Rifle->GetComponentByClass<UCaptureTheFlagWeaponComponent>();
-		if (RifleWeaponComponent)
+		WeaponComponent = Rifle->GetComponentByClass<UCaptureTheFlagWeaponComponent>();
+		if (WeaponComponent)
 		{
-			RifleWeaponComponent->AttachWeapon(this, IsLocallyControlled());
+			WeaponComponent->AttachWeapon(this, IsLocallyControlled());
 		}
 	}
 
@@ -115,6 +115,29 @@ void ACaptureTheFlagCharacter::ReleaseFlag()
 	}
 }
 
+void ACaptureTheFlagCharacter::SetPlayerName(const FString& InName) const
+{
+	if (PlayerNameWidget)
+	{
+		const UPlayerNameWidget* Widget = Cast<UPlayerNameWidget>(PlayerNameWidget->GetWidget());
+		if (!Widget)
+		{
+			PlayerNameWidget->InitWidget();
+			Widget = Cast<UPlayerNameWidget>(PlayerNameWidget->GetWidget());
+		}
+		
+		Widget->SetPlayerName(InName);
+	}
+}
+
+void ACaptureTheFlagCharacter::ServerFire_Implementation()
+{
+	if (IsValid(WeaponComponent))
+	{
+		WeaponComponent->RequestFire();
+	}
+}
+
 //////////////////////////////////////////////////////////////////////////// Input
 
 void ACaptureTheFlagCharacter::NotifyControllerChanged()
@@ -153,21 +176,6 @@ void ACaptureTheFlagCharacter::SetupPlayerInputComponent(UInputComponent* Player
 		       TEXT(
 			       "'%s' Failed to find an Enhanced Input Component! This template is built to use the Enhanced Input system. If you intend to use the legacy system, then you will need to update this C++ file."
 		       ), *GetNameSafe(this));
-	}
-}
-
-void ACaptureTheFlagCharacter::SetPlayerName(const FString& InName) const
-{
-	if (PlayerNameWidget)
-	{
-		const UPlayerNameWidget* Widget = Cast<UPlayerNameWidget>(PlayerNameWidget->GetWidget());
-		if (!Widget)
-		{
-			PlayerNameWidget->InitWidget();
-			Widget = Cast<UPlayerNameWidget>(PlayerNameWidget->GetWidget());
-		}
-		
-		Widget->SetPlayerName(InName);
 	}
 }
 

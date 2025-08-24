@@ -68,7 +68,10 @@ private:
 	
 	UPROPERTY(EditAnywhere, Category=Player, meta=(AllowPrivateAccess=true))
 	UWidgetComponent* PlayerNameWidget;
-	
+
+	UPROPERTY()
+	UCaptureTheFlagWeaponComponent* WeaponComponent;
+
 public:
 	ACaptureTheFlagCharacter();
 
@@ -93,6 +96,11 @@ public:
 	}
 
 	void SetPlayerName(const FString& InName) const;
+	
+	UFUNCTION(Server, Reliable)
+	void ServerFire();
+	void ServerFire_Implementation();
+	
 
 protected:
 	/** Called for movement input */

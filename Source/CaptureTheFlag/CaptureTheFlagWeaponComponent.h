@@ -8,7 +8,7 @@
 
 class ACaptureTheFlagCharacter;
 
-UCLASS(Blueprintable, BlueprintType, ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
+UCLASS(Blueprintable, BlueprintType, ClassGroup=(Custom), meta=(BlueprintSpawnableComponent))
 class CAPTURETHEFLAG_API UCaptureTheFlagWeaponComponent : public USkeletalMeshComponent
 {
 	GENERATED_BODY()
@@ -44,10 +44,12 @@ public:
 	/** Attaches the actor to a FirstPersonCharacter */
 	UFUNCTION(BlueprintCallable, Category="Weapon")
 	bool AttachWeapon(ACaptureTheFlagCharacter* TargetCharacter, const bool bIsLocalPlayer);
-
+	
 	/** Make the weapon Fire a Projectile */
 	UFUNCTION(BlueprintCallable, Category="Weapon")
-	void Fire();
+	void RequestFire();
+	
+	void Fire() const;
 
 protected:
 	/** Ends gameplay for this component. */

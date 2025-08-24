@@ -21,7 +21,7 @@ UCaptureTheFlagWeaponComponent::UCaptureTheFlagWeaponComponent()
 	MuzzleOffset = FVector(100.0f, 0.0f, 10.0f);
 }
 
-void UCaptureTheFlagWeaponComponent::Fire()
+void UCaptureTheFlagWeaponComponent::RequestFire()
 {
 	if (Character == nullptr || Character->GetController() == nullptr)
 	{
@@ -29,25 +29,13 @@ void UCaptureTheFlagWeaponComponent::Fire()
 	}
 
 	// Try and fire a projectile
-	if (ProjectileClass != nullptr)
+	if (Character->HasAuthority())
 	{
-		UWorld* const World = GetWorld();
-		if (World != nullptr)
-		{
-			APlayerController* PlayerController = Cast<APlayerController>(Character->GetController());
-			const FRotator SpawnRotation = PlayerController->PlayerCameraManager->GetCameraRotation();
-			// MuzzleOffset is in camera space, so transform it to world space before offsetting from the character location to find the final muzzle position
-			const FVector SpawnLocation = GetOwner()->GetActorLocation() + SpawnRotation.RotateVector(MuzzleOffset);
-	
-			//Set Spawn Collision Handling Override
-			FActorSpawnParameters ActorSpawnParams;
-			ActorSpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
-	
-			// Spawn the projectile at the muzzle
-			const ACaptureTheFlagProjectile* Projectile = World->SpawnActor<ACaptureTheFlagProjectile>(ProjectileClass, SpawnLocation, SpawnRotation, ActorSpawnParams);
-			Projectile->GetCollisionComp()->IgnoreActorWhenMoving(Character, true);
-			Projectile->GetCollisionComp()->IgnoreActorWhenMoving(GetOwner(), true);
-		}
+		Fire(); // we are server, can just fire normally
+	}
+	else
+	{
+		Character->ServerFire(); // tell server to fire
 	}
 	
 	// Try and play the sound if specified
@@ -67,6 +55,30 @@ void UCaptureTheFlagWeaponComponent::Fire()
 		}
 	}
 }
+
+void UCaptureTheFlagWeaponComponent::Fire() const
+{
+	if(ProjectileClass == nullptr) return;
+	
+	UWorld* const World = GetWorld();
+	if (World != nullptr)
+	{
+		const APlayerController* PlayerController = Cast<APlayerController>(Character->GetController());
+		const FRotator SpawnRotation = PlayerController->PlayerCameraManager->GetCameraRotation();
+		// MuzzleOffset is in camera space, so transform it to world space before offsetting from the character location to find the final muzzle position
+		const FVector SpawnLocation = GetOwner()->GetActorLocation() + SpawnRotation.RotateVector(MuzzleOffset);
+	
+		//Set Spawn Collision Handling Override
+		FActorSpawnParameters ActorSpawnParams;
+		ActorSpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+	
+		// Spawn the projectile at the muzzle
+		const ACaptureTheFlagProjectile* Projectile = World->SpawnActor<ACaptureTheFlagProjectile>(ProjectileClass, SpawnLocation, SpawnRotation, ActorSpawnParams);
+		Projectile->GetCollisionComp()->IgnoreActorWhenMoving(Character, true);
+		Projectile->GetCollisionComp()->IgnoreActorWhenMoving(GetOwner(), true);
+	}
+}
+
 
 bool UCaptureTheFlagWeaponComponent::AttachWeapon(ACaptureTheFlagCharacter* TargetCharacter, const bool bIsLocalPlayer)
 {
@@ -96,12 +108,13 @@ bool UCaptureTheFlagWeaponComponent::AttachWeapon(ACaptureTheFlagCharacter* Targ
 		if (UEnhancedInputComponent* EnhancedInputComponent = Cast<UEnhancedInputComponent>(PlayerController->InputComponent))
 		{
 			// Fire
-			EnhancedInputComponent->BindAction(FireAction, ETriggerEvent::Triggered, this, &UCaptureTheFlagWeaponComponent::Fire);
+			EnhancedInputComponent->BindAction(FireAction, ETriggerEvent::Triggered, this, &UCaptureTheFlagWeaponComponent::RequestFire);
 		}
 	}
 
 	return true;
 }
+
 
 void UCaptureTheFlagWeaponComponent::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
