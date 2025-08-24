@@ -194,7 +194,10 @@ void ACaptureTheFlagGameMode::ResetGameState(ACaptureTheFlagGameState* CTFGameSt
 		if (const ACaptureTheFlagPlayerState* CTFPlayerState = Cast<ACaptureTheFlagPlayerState>(PlayerState))
 		{
 			const EPlayerTeam PlayerTeam = CTFPlayerState->GetTeam();
-			PlayerState->GetPawn()->SetActorLocation(TeamsMap[PlayerTeam].Start->GetActorLocation());
+			if (APawn* Pawn = PlayerState->GetPawn())
+			{
+				Pawn->SetActorLocation(TeamsMap[PlayerTeam].Start->GetActorLocation());
+			}
 		}
 	}
 
