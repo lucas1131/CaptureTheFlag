@@ -76,8 +76,8 @@ void ACaptureTheFlagCharacter::BeginPlay()
 		}
 	}
 
-	const TArray StartingAbilities { FireWeaponAbility };
-	GrantPlayerAbilities(StartingAbilities);
+	FireWeaponAbility = TSubclassOf<UGameplayAbility>(FireWeaponAbilityPtr.LoadSynchronous());
+	GrantPlayerAbilities({FireWeaponAbility});
 
 	const ACaptureTheFlagPlayerState* State = GetPlayerState<ACaptureTheFlagPlayerState>();
 	if (State) SetPlayerName(State->GetPlayerName());

@@ -83,6 +83,7 @@ private:
 	UAbilitySystemComponent* AbilitySystem;
 
 	UPROPERTY(EditDefaultsOnly, Category=Ability)
+	TSoftClassPtr<UGameplayAbility> FireWeaponAbilityPtr;
 	TSubclassOf<UGameplayAbility> FireWeaponAbility;
 
 public:
