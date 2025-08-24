@@ -2,10 +2,10 @@
 
 #include "CaptureTheFlagCharacter.h"
 
+#include "AbilitySystemComponent.h"
 #include "BillboardWidgetComponent.h"
 #include "CaptureTheFlagPlayerState.h"
 #include "CaptureTheFlagWeaponComponent.h"
-#include "Animation/AnimInstance.h"
 #include "Camera/CameraComponent.h"
 #include "Components/CapsuleComponent.h"
 #include "Components/SkeletalMeshComponent.h"
@@ -54,6 +54,9 @@ ACaptureTheFlagCharacter::ACaptureTheFlagCharacter()
 	PlayerNameWidget->SetupAttachment(GetCapsuleComponent());
 	PlayerNameWidget->SetTintColorAndOpacity(PlayerTint);
 	PlayerNameWidget->SetWidgetClass(UPlayerNameWidget::StaticClass());
+
+	AbilitySystem = CreateDefaultSubobject<UAbilitySystemComponent>(TEXT("AbilitySystem"));
+	AbilitySystem->SetIsReplicated(true);
 }
 
 void ACaptureTheFlagCharacter::BeginPlay()
@@ -72,6 +75,9 @@ void ACaptureTheFlagCharacter::BeginPlay()
 			WeaponComponent->AttachWeapon(this, IsLocallyControlled());
 		}
 	}
+
+	const TArray StartingAbilities { FireWeaponAbility };
+	GrantPlayerAbilities(StartingAbilities);
 
 	const ACaptureTheFlagPlayerState* State = GetPlayerState<ACaptureTheFlagPlayerState>();
 	if (State) SetPlayerName(State->GetPlayerName());
@@ -130,12 +136,54 @@ void ACaptureTheFlagCharacter::SetPlayerName(const FString& InName) const
 	}
 }
 
-void ACaptureTheFlagCharacter::ServerFire_Implementation()
+//////////////////////////////////////////////////////////////////////////// Abilities
+
+void ACaptureTheFlagCharacter::GrantPlayerAbilities(const TArray<TSubclassOf<UGameplayAbility>>& Abilities)
 {
-	if (IsValid(WeaponComponent))
+	if (IsValid(AbilitySystem))
 	{
-		WeaponComponent->Fire();
+		if (HasAuthority())
+		{
+			for (const TSubclassOf<UGameplayAbility> Ability : Abilities)
+			{
+				GrantPlayerAbilityNotChecked(Ability);
+			}
+		}
+		else
+		{
+			ServerGrantPlayerAbilities(Abilities);
+		}
 	}
+}
+
+void ACaptureTheFlagCharacter::GrantPlayerAbility(const TSubclassOf<UGameplayAbility>& Ability)
+{
+	if (IsValid(AbilitySystem))
+	{
+		if (HasAuthority())
+		{
+			GrantPlayerAbilityNotChecked(Ability);
+		}
+		else
+		{
+			ServerGrantPlayerAbility(Ability);
+		}
+	}
+}
+
+void ACaptureTheFlagCharacter::GrantPlayerAbilityNotChecked(const TSubclassOf<UGameplayAbility>& Ability) const
+{
+	AbilitySystem->K2_GiveAbility(Ability);
+}
+
+void ACaptureTheFlagCharacter::ServerGrantPlayerAbilities_Implementation(const TArray<TSubclassOf<UGameplayAbility>>& Abilities)
+{
+	GrantPlayerAbilities(Abilities);
+}
+
+void ACaptureTheFlagCharacter::ServerGrantPlayerAbility_Implementation(TSubclassOf<UGameplayAbility> Ability)
+{
+	GrantPlayerAbility(Ability);
 }
 
 //////////////////////////////////////////////////////////////////////////// Input
@@ -147,10 +195,10 @@ void ACaptureTheFlagCharacter::NotifyControllerChanged()
 	// Add Input Mapping Context
 	if (APlayerController* PlayerController = Cast<APlayerController>(Controller))
 	{
-		if (UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(
-			PlayerController->GetLocalPlayer()))
+		if (UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(PlayerController->GetLocalPlayer()))
 		{
 			Subsystem->AddMappingContext(DefaultMappingContext, 0);
+			Subsystem->AddMappingContext(FireMappingContext, 1);
 		}
 	}
 }
@@ -171,17 +219,10 @@ void ACaptureTheFlagCharacter::SetupPlayerInputComponent(UInputComponent* Player
 		EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &ACaptureTheFlagCharacter::Look);
 		
 		// Fire
-		if (const APlayerController* PlayerController = Cast<APlayerController>(GetController()))
+		EnhancedInputComponent->BindActionValueLambda(FireAction, ETriggerEvent::Triggered, [this](const FInputActionValue& _)
 		{
-			if (UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(PlayerController->GetLocalPlayer()))
-			{
-				// Set the priority of the mapping to 1, so that it overrides the Jump action with the Fire action when using touch input
-				Subsystem->AddMappingContext(FireMappingContext, 1);
-			}
-
-			// Fire
-			EnhancedInputComponent->BindAction(FireAction, ETriggerEvent::Triggered, this, &ACaptureTheFlagCharacter::FireWeapon);
-		}
+			AbilitySystem->TryActivateAbilityByClass(FireWeaponAbility, true);
+		});
 	}
 	else
 	{
@@ -190,8 +231,6 @@ void ACaptureTheFlagCharacter::SetupPlayerInputComponent(UInputComponent* Player
 			       "'%s' Failed to find an Enhanced Input Component! This template is built to use the Enhanced Input system. If you intend to use the legacy system, then you will need to update this C++ file."
 		       ), *GetNameSafe(this));
 	}
-	
-	
 }
 
 void ACaptureTheFlagCharacter::Move(const FInputActionValue& Value)
@@ -217,20 +256,6 @@ void ACaptureTheFlagCharacter::Look(const FInputActionValue& Value)
 		// add yaw and pitch input to controller
 		AddControllerYawInput(LookAxisVector.X);
 		AddControllerPitchInput(LookAxisVector.Y);
-	}
-}
-
-void ACaptureTheFlagCharacter::FireWeapon()
-{
-	if (!IsValid(WeaponComponent)) return; // No weapon no fire
-	
-	if (HasAuthority())
-	{
-		WeaponComponent->Fire(); // we are server, can just fire normally
-	}
-	else
-	{
-		ServerFire(); // tell server to fire
 	}
 }
 

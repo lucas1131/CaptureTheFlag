@@ -7,6 +7,11 @@ public class CaptureTheFlag : ModuleRules
 	public CaptureTheFlag(ReadOnlyTargetRules Target) : base(Target)
 	{
 		PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
+		
+		PrivateDependencyModuleNames.AddRange(new string[]
+		{
+			"GameplayAbilities"
+		});
 
 		PublicDependencyModuleNames.AddRange(new string[]
 		{

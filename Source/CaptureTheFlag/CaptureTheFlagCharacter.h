@@ -3,8 +3,8 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "AbilitySystemComponent.h"
 #include "CaptureTheFlagFlagActor.h"
-#include "CaptureTheFlagPlayerState.h"
 #include "CaptureTheFlagWeaponComponent.h"
 #include "GameFramework/Character.h"
 #include "GameFramework/SpringArmComponent.h"
@@ -21,7 +21,7 @@ struct FInputActionValue;
 
 DECLARE_LOG_CATEGORY_EXTERN(LogTemplateCharacter, Log, All);
 
-UCLASS(config=Game)
+UCLASS(MinimalAPI, config=Game)
 class ACaptureTheFlagCharacter : public ACharacter
 {
 	GENERATED_BODY()
@@ -79,6 +79,11 @@ private:
 
 	UPROPERTY()
 	UCaptureTheFlagWeaponComponent* WeaponComponent;
+	UPROPERTY()
+	UAbilitySystemComponent* AbilitySystem;
+
+	UPROPERTY(EditDefaultsOnly, Category=Ability)
+	TSubclassOf<UGameplayAbility> FireWeaponAbility;
 
 public:
 	ACaptureTheFlagCharacter();
@@ -93,8 +98,9 @@ public:
 	void ReleaseFlag();
 	UFUNCTION(BlueprintCallable)
 	bool IsHoldingFlag() const { return GrabbedFlag != nullptr; }
-
 	ACaptureTheFlagFlagActor* GetHeldFlag() const { return GrabbedFlag; }
+
+	bool HasWeaponEquipped() const { return IsValid(WeaponComponent); }
 
 	UFUNCTION()
 	void SetPlayerTint(const FLinearColor Color)
@@ -104,11 +110,23 @@ public:
 	}
 
 	void SetPlayerName(const FString& InName) const;
-	
+
+	/* Abilities */
+public:
+	void GrantPlayerAbilities(const TArray<TSubclassOf<UGameplayAbility>>& Abilities);
+	void GrantPlayerAbility(const TSubclassOf<UGameplayAbility>& Ability);
+	CAPTURETHEFLAG_API void FireWeapon() const { WeaponComponent->Fire(); };
+
+private:
+	void GrantPlayerAbilityNotChecked(const TSubclassOf<UGameplayAbility>& Ability) const;
+
 	UFUNCTION(Server, Reliable)
-	void ServerFire();
-	void ServerFire_Implementation();
-	
+	void ServerGrantPlayerAbilities(const TArray<TSubclassOf<UGameplayAbility>>& Abilities);
+	void ServerGrantPlayerAbilities_Implementation(const TArray<TSubclassOf<UGameplayAbility>>& Abilities);
+
+	UFUNCTION(Server, Reliable)
+	void ServerGrantPlayerAbility(TSubclassOf<UGameplayAbility> Ability);
+	void ServerGrantPlayerAbility_Implementation(TSubclassOf<UGameplayAbility> Ability);
 
 protected:
 	/** Called for movement input */
@@ -116,7 +134,6 @@ protected:
 
 	/** Called for looking input */
 	void Look(const FInputActionValue& Value);
-	void FireWeapon();
 
 protected:
 	// APawn interface
