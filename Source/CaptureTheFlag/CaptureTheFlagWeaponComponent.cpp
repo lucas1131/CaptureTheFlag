@@ -21,10 +21,32 @@ UCaptureTheFlagWeaponComponent::UCaptureTheFlagWeaponComponent()
 	MuzzleOffset = FVector(100.0f, 0.0f, 10.0f);
 }
 
+void UCaptureTheFlagWeaponComponent::FireVisuals() const
+{
+	if(!IsValid(Character)) return;
+	
+	// Try and play the sound if specified
+	if (FireSound != nullptr)
+	{
+		UGameplayStatics::PlaySoundAtLocation(this, FireSound, Character->GetActorLocation());
+	}
+	
+	// Try and play a firing animation if specified
+	if (FireAnimation != nullptr)
+	{
+		// Get the animation object for the arms mesh
+		UAnimInstance* AnimInstance = Character->GetMesh1P()->GetAnimInstance();
+		if (AnimInstance != nullptr)
+		{
+			AnimInstance->Montage_Play(FireAnimation, 1.f);
+		}
+	}
+}
+
 void UCaptureTheFlagWeaponComponent::Fire() const
 {
 	if(ProjectileClass == nullptr || Character == nullptr || Character->GetController() == nullptr) return;
-	
+
 	UWorld* const World = GetWorld();
 	if (World != nullptr)
 	{
@@ -45,23 +67,6 @@ void UCaptureTheFlagWeaponComponent::Fire() const
 	
 		// Spawn the projectile at the muzzle
 		World->SpawnActor<ACaptureTheFlagProjectile>(ProjectileClass, SpawnLocation, SpawnRotation, ActorSpawnParams);
-	}
-	
-	// Try and play the sound if specified
-	if (FireSound != nullptr)
-	{
-		UGameplayStatics::PlaySoundAtLocation(this, FireSound, Character->GetActorLocation());
-	}
-	
-	// Try and play a firing animation if specified
-	if (FireAnimation != nullptr)
-	{
-		// Get the animation object for the arms mesh
-		UAnimInstance* AnimInstance = Character->GetMesh1P()->GetAnimInstance();
-		if (AnimInstance != nullptr)
-		{
-			AnimInstance->Montage_Play(FireAnimation, 1.f);
-		}
 	}
 }
 

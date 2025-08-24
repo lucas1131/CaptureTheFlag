@@ -116,7 +116,7 @@ public:
 public:
 	void GrantPlayerAbilities(const TArray<TSubclassOf<UGameplayAbility>>& Abilities);
 	void GrantPlayerAbility(const TSubclassOf<UGameplayAbility>& Ability);
-	CAPTURETHEFLAG_API void FireWeapon() const { WeaponComponent->Fire(); };
+	CAPTURETHEFLAG_API UCaptureTheFlagWeaponComponent* GetWeaponComponent() const { return WeaponComponent; }
 
 private:
 	void GrantPlayerAbilityNotChecked(const TSubclassOf<UGameplayAbility>& Ability) const;

@@ -10,7 +10,7 @@
 /**
  * 
  */
-UCLASS(Abstract, Blueprintable, ClassGroup=(Abilities, CaptureTheFlag))
+UCLASS(Blueprintable, ClassGroup=(Abilities, CaptureTheFlag))
 class ABILITIES_API UFireWeaponAbility : public UGameplayAbility
 {
 	GENERATED_BODY()

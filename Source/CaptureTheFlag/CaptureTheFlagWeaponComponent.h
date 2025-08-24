@@ -32,6 +32,7 @@ public:
 
 	/** Sets default values for this component's properties */
 	UCaptureTheFlagWeaponComponent();
+	void FireVisuals() const;
 
 	/** Attaches the actor to a FirstPersonCharacter */
 	UFUNCTION(BlueprintCallable, Category="Weapon")

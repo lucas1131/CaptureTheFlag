@@ -43,11 +43,22 @@ void UFireWeaponAbility::ActivateAbility(const FGameplayAbilitySpecHandle Handle
 	{
 		if (const ACaptureTheFlagCharacter* Character = Cast<ACaptureTheFlagCharacter>(ActorInfo->AvatarActor))
 		{
-			Character->FireWeapon();
+			if (const UCaptureTheFlagWeaponComponent* Weapon = Character->GetWeaponComponent())
+			{
+				if (HasAuthority(&ActivationInfo))
+				{
+					Weapon->Fire();
+				}
+
+				if (IsLocallyControlled())
+				{
+					Weapon->FireVisuals();
+				}
+			}
 		}
 
 		bCancelled = false;
 	}
-	
+
 	EndAbility(Handle, ActorInfo, ActivationInfo, false, bCancelled);
 }

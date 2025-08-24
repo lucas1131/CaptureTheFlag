@@ -10,12 +10,12 @@ public class CaptureTheFlag : ModuleRules
 		
 		PrivateDependencyModuleNames.AddRange(new string[]
 		{
-			"GameplayAbilities"
+			"GameplayAbilities",
 		});
 
 		PublicDependencyModuleNames.AddRange(new string[]
 		{
-			"Core", 
+			"Core",
 			"CoreUObject", 
 			"Engine", 
 			"InputCore", 
