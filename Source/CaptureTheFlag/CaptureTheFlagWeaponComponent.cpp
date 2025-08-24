@@ -71,11 +71,15 @@ void UCaptureTheFlagWeaponComponent::Fire() const
 		//Set Spawn Collision Handling Override
 		FActorSpawnParameters ActorSpawnParams;
 		ActorSpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+		ActorSpawnParams.CustomPreSpawnInitalization = [this](AActor* NewActor)
+		{
+			const ACaptureTheFlagProjectile* NewProjectile = Cast<ACaptureTheFlagProjectile>(NewActor);
+			NewProjectile->GetCollisionComp()->IgnoreActorWhenMoving(Character, true);
+			NewProjectile->GetCollisionComp()->IgnoreActorWhenMoving(GetOwner(), true);
+		};
 	
 		// Spawn the projectile at the muzzle
-		const ACaptureTheFlagProjectile* Projectile = World->SpawnActor<ACaptureTheFlagProjectile>(ProjectileClass, SpawnLocation, SpawnRotation, ActorSpawnParams);
-		Projectile->GetCollisionComp()->IgnoreActorWhenMoving(Character, true);
-		Projectile->GetCollisionComp()->IgnoreActorWhenMoving(GetOwner(), true);
+		World->SpawnActor<ACaptureTheFlagProjectile>(ProjectileClass, SpawnLocation, SpawnRotation, ActorSpawnParams);
 	}
 }
 
