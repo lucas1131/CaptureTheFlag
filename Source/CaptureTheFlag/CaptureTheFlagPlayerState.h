@@ -3,6 +3,8 @@
 
 #include "CaptureTheFlagPlayerState.generated.h"
 
+DECLARE_DELEGATE_OneParam(FOnPlayerNameChanged, const FString&);
+
 UENUM(BlueprintType)
 enum class EPlayerTeam : uint8
 {
@@ -23,6 +25,7 @@ UCLASS()
 class ACaptureTheFlagPlayerState : public APlayerState
 {
 	GENERATED_BODY()
+	
 private:
 	UPROPERTY(Replicated)
 	EPlayerTeam Team;
@@ -36,6 +39,8 @@ public:
 	void SetWinnerState(const EMatchState InState) { WinState = InState; }
 
 	virtual void GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLifetimeProps) const override;
+
+	virtual void OnRep_PlayerName() override;
 
 private:
 	void Win();

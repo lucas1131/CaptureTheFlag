@@ -1,5 +1,6 @@
 ﻿#include "CaptureTheFlagPlayerState.h"
 
+#include "CaptureTheFlagCharacter.h"
 #include "Net/UnrealNetwork.h"
 
 void ACaptureTheFlagPlayerState::GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLifetimeProps) const
@@ -8,6 +9,16 @@ void ACaptureTheFlagPlayerState::GetLifetimeReplicatedProps(TArray<class FLifeti
 	
 	DOREPLIFETIME(ACaptureTheFlagPlayerState, Team);
 	DOREPLIFETIME(ACaptureTheFlagPlayerState, WinState);
+}
+
+void ACaptureTheFlagPlayerState::OnRep_PlayerName()
+{
+	Super::OnRep_PlayerName();
+
+	if (const ACaptureTheFlagCharacter* Character = Cast<ACaptureTheFlagCharacter>(GetPawn()))
+	{
+		Character->SetPlayerName(GetPlayerName());
+	}
 }
 
 void ACaptureTheFlagPlayerState::Win()

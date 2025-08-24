@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "CaptureTheFlagFlagActor.h"
+#include "CaptureTheFlagPlayerState.h"
 #include "CaptureTheFlagWeaponComponent.h"
 #include "GameFramework/Character.h"
 #include "GameFramework/SpringArmComponent.h"
@@ -90,6 +91,8 @@ public:
 		PlayerTint = Color;
 		ApplyPlayerTint();
 	}
+
+	void SetPlayerName(const FString& InName) const;
 
 protected:
 	/** Called for movement input */

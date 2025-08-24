@@ -72,14 +72,14 @@ void ACaptureTheFlagGameMode::InitGame(const FString& MapName, const FString& Op
 
 void ACaptureTheFlagGameMode::SetupNewPlayer(APlayerController* NewPlayer, const EPlayerTeam Team)
 {
-	ACaptureTheFlagPlayerState* NewPlayerState = NewPlayer->GetPlayerState<ACaptureTheFlagPlayerState>();
-	NewPlayerState->SetTeam(Team);
 	TeamsMap[Team].NumPlayers++;
 
-	// For now, player name is mostly for debugging since there is no input for player name
-	const int NumPlayers = TeamsMap[EPlayerTeam::Blue].NumPlayers + TeamsMap[EPlayerTeam::Blue].NumPlayers;
+	ACaptureTheFlagPlayerState* NewPlayerState = NewPlayer->GetPlayerState<ACaptureTheFlagPlayerState>();
+	NewPlayerState->SetTeam(Team);
+	// For now, player name is mostly for debugging since there is no input for player name and show enemy names is probably bad design
+	const int NumPlayers = TeamsMap[EPlayerTeam::Blue].NumPlayers + TeamsMap[EPlayerTeam::Red].NumPlayers - 1; // -1 for host
 	const FString PlayerName = NewPlayer->IsLocalController() ? TEXT("Host") : FString::Printf(TEXT("Client %d"), NumPlayers);
-	NewPlayerState->SetPlayerName(PlayerName); 
+	NewPlayerState->SetPlayerName(PlayerName);
 	
 	SetPlayerLocationAt(NewPlayer, TeamsMap[Team].Start);
 

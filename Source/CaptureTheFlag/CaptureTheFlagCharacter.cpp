@@ -3,6 +3,7 @@
 #include "CaptureTheFlagCharacter.h"
 
 #include "BillboardWidgetComponent.h"
+#include "CaptureTheFlagPlayerState.h"
 #include "CaptureTheFlagWeaponComponent.h"
 #include "Animation/AnimInstance.h"
 #include "Camera/CameraComponent.h"
@@ -11,7 +12,7 @@
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
 #include "InputActionValue.h"
-#include "Components/BillboardComponent.h"
+#include "PlayerNameWidget.h"
 #include "Components/WidgetComponent.h"
 #include "Engine/LocalPlayer.h"
 #include "GameFramework/SpringArmComponent.h"
@@ -52,6 +53,7 @@ ACaptureTheFlagCharacter::ACaptureTheFlagCharacter()
 	PlayerNameWidget = CreateDefaultSubobject<UBillboardWidgetComponent>(TEXT("PlayerNameWidget"));
 	PlayerNameWidget->SetupAttachment(GetCapsuleComponent());
 	PlayerNameWidget->SetTintColorAndOpacity(PlayerTint);
+	PlayerNameWidget->SetWidgetClass(UPlayerNameWidget::StaticClass());
 }
 
 void ACaptureTheFlagCharacter::BeginPlay()
@@ -70,6 +72,9 @@ void ACaptureTheFlagCharacter::BeginPlay()
 			RifleWeaponComponent->AttachWeapon(this, IsLocallyControlled());
 		}
 	}
+
+	const ACaptureTheFlagPlayerState* State = GetPlayerState<ACaptureTheFlagPlayerState>();
+	if (State) SetPlayerName(State->GetPlayerName());
 }
 
 void ACaptureTheFlagCharacter::GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLifetimeProps) const
@@ -148,6 +153,21 @@ void ACaptureTheFlagCharacter::SetupPlayerInputComponent(UInputComponent* Player
 		       TEXT(
 			       "'%s' Failed to find an Enhanced Input Component! This template is built to use the Enhanced Input system. If you intend to use the legacy system, then you will need to update this C++ file."
 		       ), *GetNameSafe(this));
+	}
+}
+
+void ACaptureTheFlagCharacter::SetPlayerName(const FString& InName) const
+{
+	if (PlayerNameWidget)
+	{
+		const UPlayerNameWidget* Widget = Cast<UPlayerNameWidget>(PlayerNameWidget->GetWidget());
+		if (!Widget)
+		{
+			PlayerNameWidget->InitWidget();
+			Widget = Cast<UPlayerNameWidget>(PlayerNameWidget->GetWidget());
+		}
+		
+		Widget->SetPlayerName(InName);
 	}
 }
 
