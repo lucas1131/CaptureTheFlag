@@ -39,7 +39,7 @@ void ACaptureTheFlagFlagActor::BeginPlay()
 
 	if (ACaptureTheFlagGameState* GameState = GetWorld()->GetGameState<ACaptureTheFlagGameState>())
 	{
-		GameState->OnMatchStarted.AddLambda([this]()
+		GameState->OnMatchReset.AddLambda([this]()
 		{
 			ResetFlag();
 			Pole->SetVisibility(true);
