@@ -8,6 +8,7 @@
 UFireWeaponAbility::UFireWeaponAbility()
 {
 	InstancingPolicy = EGameplayAbilityInstancingPolicy::InstancedPerActor;
+	ReplicationPolicy = EGameplayAbilityReplicationPolicy::ReplicateYes;
 	ActivationOwnedTags.AddTag(FGameplayTag::RequestGameplayTag(FName("Character.Weapon.FireSemiAuto")));
 }
 
@@ -37,11 +38,16 @@ void UFireWeaponAbility::ActivateAbility(const FGameplayAbilitySpecHandle Handle
 {
 	Super::ActivateAbility(Handle, ActorInfo, ActivationInfo, TriggerEventData);
 
-	if (ACaptureTheFlagCharacter* Character = Cast<ACaptureTheFlagCharacter>(ActorInfo->AvatarActor))
+	bool bCancelled = true;
+	if (CommitAbility(Handle, ActorInfo, ActivationInfo))
 	{
-		Character->FireWeapon();
-	}
+		if (const ACaptureTheFlagCharacter* Character = Cast<ACaptureTheFlagCharacter>(ActorInfo->AvatarActor))
+		{
+			Character->FireWeapon();
+		}
 
-	// End immediately, no automatic fire for now
-	EndAbility(Handle, ActorInfo, ActivationInfo, true, false);
+		bCancelled = false;
+	}
+	
+	EndAbility(Handle, ActorInfo, ActivationInfo, false, bCancelled);
 }
