@@ -21,44 +21,9 @@ UCaptureTheFlagWeaponComponent::UCaptureTheFlagWeaponComponent()
 	MuzzleOffset = FVector(100.0f, 0.0f, 10.0f);
 }
 
-void UCaptureTheFlagWeaponComponent::RequestFire()
-{
-	if (Character == nullptr || Character->GetController() == nullptr)
-	{
-		return;
-	}
-
-	// Try and fire a projectile
-	if (Character->HasAuthority())
-	{
-		Fire(); // we are server, can just fire normally
-	}
-	else
-	{
-		Character->ServerFire(); // tell server to fire
-	}
-	
-	// Try and play the sound if specified
-	if (FireSound != nullptr)
-	{
-		UGameplayStatics::PlaySoundAtLocation(this, FireSound, Character->GetActorLocation());
-	}
-	
-	// Try and play a firing animation if specified
-	if (FireAnimation != nullptr)
-	{
-		// Get the animation object for the arms mesh
-		UAnimInstance* AnimInstance = Character->GetMesh1P()->GetAnimInstance();
-		if (AnimInstance != nullptr)
-		{
-			AnimInstance->Montage_Play(FireAnimation, 1.f);
-		}
-	}
-}
-
 void UCaptureTheFlagWeaponComponent::Fire() const
 {
-	if(ProjectileClass == nullptr) return;
+	if(ProjectileClass == nullptr || Character == nullptr || Character->GetController() == nullptr) return;
 	
 	UWorld* const World = GetWorld();
 	if (World != nullptr)
@@ -81,8 +46,24 @@ void UCaptureTheFlagWeaponComponent::Fire() const
 		// Spawn the projectile at the muzzle
 		World->SpawnActor<ACaptureTheFlagProjectile>(ProjectileClass, SpawnLocation, SpawnRotation, ActorSpawnParams);
 	}
+	
+	// Try and play the sound if specified
+	if (FireSound != nullptr)
+	{
+		UGameplayStatics::PlaySoundAtLocation(this, FireSound, Character->GetActorLocation());
+	}
+	
+	// Try and play a firing animation if specified
+	if (FireAnimation != nullptr)
+	{
+		// Get the animation object for the arms mesh
+		UAnimInstance* AnimInstance = Character->GetMesh1P()->GetAnimInstance();
+		if (AnimInstance != nullptr)
+		{
+			AnimInstance->Montage_Play(FireAnimation, 1.f);
+		}
+	}
 }
-
 
 bool UCaptureTheFlagWeaponComponent::AttachWeapon(ACaptureTheFlagCharacter* TargetCharacter, const bool bIsLocalPlayer)
 {
@@ -100,42 +81,5 @@ bool UCaptureTheFlagWeaponComponent::AttachWeapon(ACaptureTheFlagCharacter* Targ
 	USkeletalMeshComponent* Mesh = bIsLocalPlayer ? Character->GetMesh1P() : Character->GetMesh();
 	AttachToComponent(Mesh, AttachmentRules, FName(TEXT("GripPoint")));
 
-	// Set up action bindings
-	if (APlayerController* PlayerController = Cast<APlayerController>(Character->GetController()))
-	{
-		if (UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(PlayerController->GetLocalPlayer()))
-		{
-			// Set the priority of the mapping to 1, so that it overrides the Jump action with the Fire action when using touch input
-			Subsystem->AddMappingContext(FireMappingContext, 1);
-		}
-
-		if (UEnhancedInputComponent* EnhancedInputComponent = Cast<UEnhancedInputComponent>(PlayerController->InputComponent))
-		{
-			// Fire
-			EnhancedInputComponent->BindAction(FireAction, ETriggerEvent::Triggered, this, &UCaptureTheFlagWeaponComponent::RequestFire);
-		}
-	}
-
 	return true;
 }
-
-
-void UCaptureTheFlagWeaponComponent::EndPlay(const EEndPlayReason::Type EndPlayReason)
-{
-	// ensure we have a character owner
-	if (Character != nullptr)
-	{
-		// remove the input mapping context from the Player Controller
-		if (APlayerController* PlayerController = Cast<APlayerController>(Character->GetController()))
-		{
-			if (UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(PlayerController->GetLocalPlayer()))
-			{
-				Subsystem->RemoveMappingContext(FireMappingContext);
-			}
-		}
-	}
-
-	// maintain the EndPlay call chain
-	Super::EndPlay(EndPlayReason);
-}
-

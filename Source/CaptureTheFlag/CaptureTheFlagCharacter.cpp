@@ -134,7 +134,7 @@ void ACaptureTheFlagCharacter::ServerFire_Implementation()
 {
 	if (IsValid(WeaponComponent))
 	{
-		WeaponComponent->RequestFire();
+		WeaponComponent->Fire();
 	}
 }
 
@@ -169,6 +169,19 @@ void ACaptureTheFlagCharacter::SetupPlayerInputComponent(UInputComponent* Player
 
 		// Looking
 		EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &ACaptureTheFlagCharacter::Look);
+		
+		// Fire
+		if (const APlayerController* PlayerController = Cast<APlayerController>(GetController()))
+		{
+			if (UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(PlayerController->GetLocalPlayer()))
+			{
+				// Set the priority of the mapping to 1, so that it overrides the Jump action with the Fire action when using touch input
+				Subsystem->AddMappingContext(FireMappingContext, 1);
+			}
+
+			// Fire
+			EnhancedInputComponent->BindAction(FireAction, ETriggerEvent::Triggered, this, &ACaptureTheFlagCharacter::FireWeapon);
+		}
 	}
 	else
 	{
@@ -177,6 +190,8 @@ void ACaptureTheFlagCharacter::SetupPlayerInputComponent(UInputComponent* Player
 			       "'%s' Failed to find an Enhanced Input Component! This template is built to use the Enhanced Input system. If you intend to use the legacy system, then you will need to update this C++ file."
 		       ), *GetNameSafe(this));
 	}
+	
+	
 }
 
 void ACaptureTheFlagCharacter::Move(const FInputActionValue& Value)
@@ -202,6 +217,20 @@ void ACaptureTheFlagCharacter::Look(const FInputActionValue& Value)
 		// add yaw and pitch input to controller
 		AddControllerYawInput(LookAxisVector.X);
 		AddControllerPitchInput(LookAxisVector.Y);
+	}
+}
+
+void ACaptureTheFlagCharacter::FireWeapon()
+{
+	if (!IsValid(WeaponComponent)) return; // No weapon no fire
+	
+	if (HasAuthority())
+	{
+		WeaponComponent->Fire(); // we are server, can just fire normally
+	}
+	else
+	{
+		ServerFire(); // tell server to fire
 	}
 }
 
