@@ -77,6 +77,12 @@ private:
 	UPROPERTY(ReplicatedUsing=OnRep_SetMaterialTint)
 	FLinearColor PlayerTint;
 	
+	UPROPERTY(ReplicatedUsing=OnRep_SetIsRagdoll)
+	bool bIsRagdoll;
+	
+	FVector DeathCameraLocation;
+	FVector CameraDefaultLocation;
+	
 	UPROPERTY(EditAnywhere, Category=Player, meta=(AllowPrivateAccess=true))
 	UWidgetComponent* PlayerNameWidget;
 
@@ -112,15 +118,29 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void GrabFlag(ACaptureTheFlagFlagActor* PickingFlag);
 	UFUNCTION(BlueprintCallable)
-	void DropFlag();
+	CAPTURETHEFLAG_API void DropFlag();
 	UFUNCTION(BlueprintCallable)
-	void ReleaseFlag();
+	CAPTURETHEFLAG_API void ReleaseFlag();
 	UFUNCTION(BlueprintCallable)
-	bool IsHoldingFlag() const { return GrabbedFlag != nullptr; }
+	CAPTURETHEFLAG_API bool IsHoldingFlag() const { return GrabbedFlag != nullptr; }
 	ACaptureTheFlagFlagActor* GetHeldFlag() const { return GrabbedFlag; }
 
-	bool HasWeaponEquipped() const { return IsValid(WeaponComponent); }
+	CAPTURETHEFLAG_API bool HasWeaponEquipped() const { return IsValid(WeaponComponent); }
+	
+	CAPTURETHEFLAG_API void SetRagdoll(const bool InbIsRagdoll)
+	{
+		bIsRagdoll = InbIsRagdoll;
+		if (HasAuthority())
+		{
+			OnRep_SetIsRagdoll(); // Force rep on host 
+		}
+	};
+	
+private:
+	UFUNCTION()
+	void OnRep_SetIsRagdoll() const;
 
+public:
 	UFUNCTION()
 	void SetPlayerTint(const FLinearColor Color)
 	{

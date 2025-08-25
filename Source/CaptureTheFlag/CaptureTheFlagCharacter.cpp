@@ -163,6 +163,7 @@ void ACaptureTheFlagCharacter::GetLifetimeReplicatedProps(TArray<class FLifetime
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
 	DOREPLIFETIME(ACaptureTheFlagCharacter, PlayerTint);
+	DOREPLIFETIME(ACaptureTheFlagCharacter, bIsRagdoll);
 }
 
 void ACaptureTheFlagCharacter::GrabFlag(ACaptureTheFlagFlagActor* PickingFlag)
@@ -195,6 +196,40 @@ void ACaptureTheFlagCharacter::ReleaseFlag()
 		GrabbedFlag = nullptr;
 	}
 }
+
+void ACaptureTheFlagCharacter::OnRep_SetIsRagdoll() const
+{
+	USkeletalMeshComponent* Mesh3P = GetMesh();
+
+	// TODO a lot of testing collision here
+	if (Mesh1P)
+	{
+		Mesh1P->SetOwnerNoSee(bIsRagdoll);
+		Mesh1P->SetCollisionProfileName(bIsRagdoll ? "NoCollision" : "Pawn");
+	}
+
+	if (Mesh3P)
+	{
+		Mesh3P->SetOwnerNoSee(!bIsRagdoll);
+		Mesh3P->SetAllBodiesSimulatePhysics(bIsRagdoll);
+		Mesh3P->SetSimulatePhysics(bIsRagdoll);
+		Mesh3P->SetCollisionProfileName(bIsRagdoll ? "Ragdoll" : "Pawn");
+		Mesh3P->bPauseAnims = bIsRagdoll;
+
+		FirstPersonCameraComponent->SetRelativeLocation(bIsRagdoll ? DeathCameraLocation : CameraDefaultLocation);
+	}
+
+	if (UCapsuleComponent* Capsule = GetCapsuleComponent())
+	{
+		Capsule->SetCollisionEnabled(bIsRagdoll ? ECollisionEnabled::Type::NoCollision : ECollisionEnabled::Type::QueryAndPhysics);
+	}
+
+	if (WeaponComponent)
+	{
+		WeaponComponent->SetOwnerNoSee(bIsRagdoll);
+	}
+}
+
 
 void ACaptureTheFlagCharacter::SetPlayerName(const FString& InName) const
 {
