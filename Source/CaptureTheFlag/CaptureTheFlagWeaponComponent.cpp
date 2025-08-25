@@ -66,7 +66,8 @@ void UCaptureTheFlagWeaponComponent::Fire() const
 		};
 	
 		// Spawn the projectile at the muzzle
-		World->SpawnActor<ACaptureTheFlagProjectile>(ProjectileClass, SpawnLocation, SpawnRotation, ActorSpawnParams);
+		ACaptureTheFlagProjectile* Projectile = World->SpawnActor<ACaptureTheFlagProjectile>(ProjectileClass, SpawnLocation, SpawnRotation, ActorSpawnParams);
+		Projectile->SetHitEffect(HitEffectClass);
 	}
 }
 

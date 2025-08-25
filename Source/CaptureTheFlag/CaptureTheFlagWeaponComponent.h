@@ -6,6 +6,7 @@
 #include "Components/SkeletalMeshComponent.h"
 #include "CaptureTheFlagWeaponComponent.generated.h"
 
+class UGameplayEffect;
 class ACaptureTheFlagCharacter;
 
 UCLASS(Blueprintable, BlueprintType, ClassGroup=(Custom), meta=(BlueprintSpawnableComponent))
@@ -29,7 +30,7 @@ public:
 	/** Gun muzzle's offset from the characters location */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category=Gameplay)
 	FVector MuzzleOffset;
-
+	
 	/** Sets default values for this component's properties */
 	UCaptureTheFlagWeaponComponent();
 	void FireVisuals() const;
@@ -45,4 +46,7 @@ private:
 	/** The Character holding this weapon*/
 	UPROPERTY()
 	ACaptureTheFlagCharacter* Character;
+
+	UPROPERTY(EditAnywhere, Category=Gameplay)
+	TSubclassOf<UGameplayEffect> HitEffectClass;
 };
