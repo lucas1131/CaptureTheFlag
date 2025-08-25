@@ -43,6 +43,9 @@ void ACaptureTheFlagGameMode::InitGame(const FString& MapName, const FString& Op
 	TArray<AActor*> WorldActors;
 	UGameplayStatics::GetAllActorsOfClass(GetWorld(), APlayerStart::StaticClass(), WorldActors);
 
+	TeamsMap[EPlayerTeam::Blue].NextPlayerStartIndex = 0;
+	TeamsMap[EPlayerTeam::Red].NextPlayerStartIndex = 0;
+	
 	for (AActor* Actor : WorldActors)
 	{
 		APlayerStart* PlayerStart = Cast<APlayerStart>(Actor);
@@ -50,15 +53,15 @@ void ACaptureTheFlagGameMode::InitGame(const FString& MapName, const FString& Op
 		{
 			if (PlayerStart->PlayerStartTag == FName("Blue"))
 			{
-				TeamsMap[EPlayerTeam::Blue].Start = PlayerStart;
+				TeamsMap[EPlayerTeam::Blue].PossibleStarts.Add(PlayerStart);
 			}
 			else if (PlayerStart->PlayerStartTag == FName("Red"))
 			{
-				TeamsMap[EPlayerTeam::Red].Start = PlayerStart;
+				TeamsMap[EPlayerTeam::Red].PossibleStarts.Add(PlayerStart);
 			}
 			else if (PlayerStart->PlayerStartTag == FName("Spectator"))
 			{
-				TeamsMap[EPlayerTeam::Spectator].Start = PlayerStart;
+				TeamsMap[EPlayerTeam::Spectator].PossibleStarts.Add(PlayerStart);
 			}
 			else
 			{
@@ -68,6 +71,18 @@ void ACaptureTheFlagGameMode::InitGame(const FString& MapName, const FString& Op
 			}
 		}
 	}
+}
+
+const APlayerStart* ACaptureTheFlagGameMode::GetNextPlayerStartForTeam(const EPlayerTeam Team)
+{
+	if (TeamsMap[Team].NextPlayerStartIndex >= TeamsMap[Team].PossibleStarts.Num())
+	{
+		TeamsMap[Team].NextPlayerStartIndex = 0;
+	}
+
+	const int NextIndex = TeamsMap[Team].NextPlayerStartIndex;
+	TeamsMap[Team].NextPlayerStartIndex++;
+	return TeamsMap[Team].PossibleStarts[NextIndex];
 }
 
 void ACaptureTheFlagGameMode::SetupNewPlayer(APlayerController* NewPlayer, const EPlayerTeam Team)
@@ -80,8 +95,8 @@ void ACaptureTheFlagGameMode::SetupNewPlayer(APlayerController* NewPlayer, const
 	const int NumPlayers = TeamsMap[EPlayerTeam::Blue].NumPlayers + TeamsMap[EPlayerTeam::Red].NumPlayers - 1; // -1 for host
 	const FString PlayerName = NewPlayer->IsLocalController() ? TEXT("Host") : FString::Printf(TEXT("Client %d"), NumPlayers);
 	NewPlayerState->SetPlayerName(PlayerName);
-	
-	SetPlayerLocationAt(NewPlayer, TeamsMap[Team].Start);
+
+	SetPlayerLocationAt(NewPlayer, GetNextPlayerStartForTeam(Team));
 
 	if (ACaptureTheFlagCharacter* Character = Cast<ACaptureTheFlagCharacter>(NewPlayer->GetCharacter()))
 	{
@@ -157,7 +172,7 @@ void ACaptureTheFlagGameMode::MovePlayerBackToSpawn(const APlayerController* Pla
 
 	if (const ACaptureTheFlagPlayerState* CTFPlayerState = PlayerController->GetPlayerState<ACaptureTheFlagPlayerState>())
 	{
-		const APlayerStart* PlayerStart = TeamsMap[CTFPlayerState->GetTeam()].Start;
+		const APlayerStart* PlayerStart = GetNextPlayerStartForTeam(CTFPlayerState->GetTeam());
 		PlayerController->GetCharacter()->SetActorLocationAndRotation(PlayerStart->GetActorLocation(), PlayerStart->GetActorRotation());		
 	}
 }
@@ -208,10 +223,10 @@ void ACaptureTheFlagGameMode::ResetGameState(ACaptureTheFlagGameState* CTFGameSt
 	{
 		if (const ACaptureTheFlagPlayerState* CTFPlayerState = Cast<ACaptureTheFlagPlayerState>(PlayerState))
 		{
-			const EPlayerTeam PlayerTeam = CTFPlayerState->GetTeam();
 			if (APawn* Pawn = PlayerState->GetPawn())
 			{
-				Pawn->SetActorLocation(TeamsMap[PlayerTeam].Start->GetActorLocation());
+				const APlayerStart* PlayerStart = GetNextPlayerStartForTeam(CTFPlayerState->GetTeam());
+				Pawn->SetActorLocationAndRotation(PlayerStart->GetActorLocation(), PlayerStart->GetActorRotation());		
 			}
 		}
 	}

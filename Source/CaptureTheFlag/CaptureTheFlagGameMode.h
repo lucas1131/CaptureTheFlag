@@ -16,7 +16,8 @@ struct FTeamPlayerData
 
 	int NumPlayers;
 	UPROPERTY()
-	APlayerStart* Start;
+	TArray<APlayerStart*> PossibleStarts;
+	int NextPlayerStartIndex;
 };
 
 UCLASS(MinimalAPI)
@@ -53,6 +54,7 @@ private:
 	virtual void BeginPlay() override;
 	virtual void InitGame(const FString& MapName, const FString& Options, FString& ErrorMessage) override;
 
+	const APlayerStart* GetNextPlayerStartForTeam(EPlayerTeam Team);
 	void SetupNewPlayer(APlayerController* NewPlayer, EPlayerTeam Team);
 	virtual void PostLogin(APlayerController* NewPlayer) override;
 	virtual void Logout(AController* ExitingPlayer) override;
