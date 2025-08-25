@@ -1,20 +1,18 @@
 ﻿// Fill out your copyright notice in the Description page of Project Settings.
-
-
-#include "CaptureTheFlagCharacterAttributeSet.h"
+#include "HealthAttributeSet.h"
 
 #include "GameplayEffectExtension.h"
 #include "Net/UnrealNetwork.h"
 
-void UCaptureTheFlagCharacterAttributeSet::GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLifetimeProps) const
+void UHealthAttributeSet::GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLifetimeProps) const
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
-	DOREPLIFETIME(UCaptureTheFlagCharacterAttributeSet, Health);
-	DOREPLIFETIME(UCaptureTheFlagCharacterAttributeSet, MaxHealth);
+	DOREPLIFETIME(UHealthAttributeSet, Health);
+	DOREPLIFETIME(UHealthAttributeSet, MaxHealth);
 }
 
-void UCaptureTheFlagCharacterAttributeSet::PreAttributeChange(const FGameplayAttribute& Attribute, float& NewValue)
+void UHealthAttributeSet::PreAttributeChange(const FGameplayAttribute& Attribute, float& NewValue)
 {
 	if (Attribute == GetHealthAttribute())
 	{
@@ -28,40 +26,50 @@ void UCaptureTheFlagCharacterAttributeSet::PreAttributeChange(const FGameplayAtt
 	Super::PreAttributeChange(Attribute, NewValue);
 }
 
-void UCaptureTheFlagCharacterAttributeSet::PostAttributeChange(const FGameplayAttribute& Attribute, float OldValue, float NewValue)
+void UHealthAttributeSet::PostAttributeChange(const FGameplayAttribute& Attribute, float OldValue, float NewValue)
 {
 	Super::PostAttributeChange(Attribute, OldValue, NewValue);
 
 	if (Attribute == GetHealthAttribute())
 	{
-		OnHealthChanged.Broadcast(NewValue);
+		OnHealthChanged.Broadcast(OldValue, NewValue);
 	}
 }
 
-void UCaptureTheFlagCharacterAttributeSet::PostGameplayEffectExecute(const FGameplayEffectModCallbackData& Data)
+void UHealthAttributeSet::PostGameplayEffectExecute(const FGameplayEffectModCallbackData& Data)
 {
 	Super::PostGameplayEffectExecute(Data);
 
-	if (Data.EvaluatedData.Attribute == GetDamageAttribute())
+	if (Data.EvaluatedData.Attribute == GetDamageHealthAttribute())
 	{
 		const float OldHealthValue = GetHealth();
-		const float NewHealthValue = FMath::Clamp(OldHealthValue - GetDamage(), 0.0f, GetMaxHealth());
+		const float NewHealthValue = FMath::Clamp(OldHealthValue - GetDamageHealth(), 0.0f, GetMaxHealth());
 
 		if (OldHealthValue != NewHealthValue)
 		{
 			SetHealth(NewHealthValue);
 		}
 
-		SetDamage(0.0f);
+		const AActor* AbilityActor = Data.Target.AbilityActorInfo->AvatarActor.Get();
+		if (AbilityActor && AbilityActor->HasAuthority() && NewHealthValue <= UE_SMALL_NUMBER)
+		{
+			FGameplayEventData EventData;
+			EventData.EventTag = FGameplayTag::RequestGameplayTag(FName("Event.Death"));
+			EventData.Instigator = Data.EffectSpec.GetContext().GetInstigator();
+			EventData.Target = *Data.Target.AbilityActorInfo->AvatarActor;
+			Data.Target.HandleGameplayEvent(EventData.EventTag, &EventData);
+		}
+
+		SetDamageHealth(0.0f);
 	}
 }
 
-void UCaptureTheFlagCharacterAttributeSet::OnRep_Health() const
+void UHealthAttributeSet::OnRep_Health(const FGameplayAttributeData& OldHealth) const
 {
-	OnHealthChanged.Broadcast(GetHealth());
+	OnHealthChanged.Broadcast(OldHealth.GetCurrentValue(), GetHealth());
 }
 
-void UCaptureTheFlagCharacterAttributeSet::OnRep_MaxHealth() const
+void UHealthAttributeSet::OnRep_MaxHealth(const FGameplayAttributeData& OldMaxHealth) const
 {
-	OnHealthChanged.Broadcast(GetHealth());
+	OnHealthChanged.Broadcast(OldMaxHealth.GetCurrentValue(), GetHealth());
 }

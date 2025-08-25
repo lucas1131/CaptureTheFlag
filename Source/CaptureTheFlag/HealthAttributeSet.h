@@ -5,7 +5,8 @@
 #include "CoreMinimal.h"
 #include "AbilitySystemComponent.h"
 #include "AttributeSet.h"
-#include "CaptureTheFlagCharacterAttributeSet.generated.h"
+#include "GameplayEffectExecutionCalculation.h"
+#include "HealthAttributeSet.generated.h"
 
 #define ATTRIBUTE_ACCESSORS(ClassName, PropertyName) \
 	GAMEPLAYATTRIBUTE_PROPERTY_GETTER(ClassName, PropertyName) \
@@ -13,40 +14,40 @@
 	GAMEPLAYATTRIBUTE_VALUE_SETTER(PropertyName) \
 	GAMEPLAYATTRIBUTE_VALUE_INITTER(PropertyName)
 
-DECLARE_MULTICAST_DELEGATE_OneParam(FOnHealthChanged, float Health)
+DECLARE_MULTICAST_DELEGATE_TwoParams(FOnHealthChanged, float OldHealth, float NewHealth);
 
 /**
  * 
  */
 UCLASS()
-class CAPTURETHEFLAG_API UCaptureTheFlagCharacterAttributeSet : public UAttributeSet
+class CAPTURETHEFLAG_API UHealthAttributeSet : public UAttributeSet
 {
 	GENERATED_BODY()
 public:
 	FOnHealthChanged OnHealthChanged;
 	
 private:
-	UPROPERTY(VisibleAnywhere, ReplicatedUsing=OnRep_Health, meta=(HideFromModifiers))
+	UPROPERTY(VisibleAnywhere, ReplicatedUsing=OnRep_Health)
 	FGameplayAttributeData Health = 100.0f;
-	ATTRIBUTE_ACCESSORS(UCaptureTheFlagCharacterAttributeSet, Health)
+	ATTRIBUTE_ACCESSORS(UHealthAttributeSet, Health)
 
 	UPROPERTY(VisibleAnywhere, ReplicatedUsing=OnRep_MaxHealth)
 	FGameplayAttributeData MaxHealth = 100.0f;
-	ATTRIBUTE_ACCESSORS(UCaptureTheFlagCharacterAttributeSet, MaxHealth)
+	ATTRIBUTE_ACCESSORS(UHealthAttributeSet, MaxHealth)
 	
 	UPROPERTY(VisibleAnywhere)
-	FGameplayAttributeData Damage;
-	ATTRIBUTE_ACCESSORS(UCaptureTheFlagCharacterAttributeSet, Damage)
+	FGameplayAttributeData DamageHealth;
+	ATTRIBUTE_ACCESSORS(UHealthAttributeSet, DamageHealth)
 
 protected:
-	virtual void GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLifetimeProps) const override;
+	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 	virtual void PreAttributeChange(const FGameplayAttribute& Attribute, float& NewValue) override;
 	virtual void PostAttributeChange(const FGameplayAttribute& Attribute, float OldValue, float NewValue) override;
-	virtual void PostGameplayEffectExecute(const struct FGameplayEffectModCallbackData& Data) override;
+	virtual void PostGameplayEffectExecute(const FGameplayEffectModCallbackData& Data) override;
 
 private:
 	UFUNCTION()
-	void OnRep_Health() const;
+	void OnRep_Health(const FGameplayAttributeData& OldHealth) const;
 	UFUNCTION()
-	void OnRep_MaxHealth() const;
+	void OnRep_MaxHealth(const FGameplayAttributeData& OldMaxHealth) const;
 };
