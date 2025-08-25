@@ -1,7 +1,22 @@
 ﻿#pragma once
+#include "Blueprint/UserWidget.h"
+#include "CountdownWidget.generated.h"
 
-class CountdownWidget
+class UAbilitySystemComponent;
+
+UCLASS()
+class UI_API UCountdownWidget : public UUserWidget
 {
-public:
+	GENERATED_BODY()
+
+private:
+	UPROPERTY()
+	UAbilitySystemComponent* AbilitySystem;
 	
+public:
+	void SetupAbilityComponent(UAbilitySystemComponent* InASC) { AbilitySystem = InASC; }
+
+protected:
+	UFUNCTION(BlueprintCallable, BlueprintPure)
+	float GetRemainingCountdown() const;
 };
