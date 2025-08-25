@@ -19,7 +19,7 @@ struct FTeamPlayerData
 	APlayerStart* Start;
 };
 
-UCLASS(minimalapi)
+UCLASS(MinimalAPI)
 class ACaptureTheFlagGameMode : public AGameModeBase
 {
 	GENERATED_BODY()
@@ -47,6 +47,7 @@ public:
 	ACaptureTheFlagGameMode();
 	FLinearColor GetTeamColor(const EPlayerTeam Team) { return TeamColors[Team]; }
 	void IncrementScoreForTeam(EPlayerTeam Team);
+	CAPTURETHEFLAG_API void MovePlayerBackToSpawn(const APlayerController* PlayerController);
 
 private:
 	virtual void BeginPlay() override;

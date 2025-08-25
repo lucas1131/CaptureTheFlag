@@ -86,6 +86,10 @@ void ACaptureTheFlagGameMode::SetupNewPlayer(APlayerController* NewPlayer, const
 	if (ACaptureTheFlagCharacter* Character = Cast<ACaptureTheFlagCharacter>(NewPlayer->GetCharacter()))
 	{
 		Character->SetPlayerTint(TeamColors[Team]);
+		if (Team != EPlayerTeam::Spectator)
+		{
+			Character->SetupTeamTag(Team);
+		}
 	}
 }
 
@@ -144,6 +148,17 @@ void ACaptureTheFlagGameMode::IncrementScoreForTeam(const EPlayerTeam Team)
 	if (CheckWinConditionForTeam(Team, TeamScore))
 	{
 		EndGame(Team, CTFGameState); 
+	}
+}
+
+void ACaptureTheFlagGameMode::MovePlayerBackToSpawn(const APlayerController* PlayerController)
+{
+	if (!PlayerController || !PlayerController->GetCharacter()) return;
+
+	if (const ACaptureTheFlagPlayerState* CTFPlayerState = PlayerController->GetPlayerState<ACaptureTheFlagPlayerState>())
+	{
+		const APlayerStart* PlayerStart = TeamsMap[CTFPlayerState->GetTeam()].Start;
+		PlayerController->GetCharacter()->SetActorLocationAndRotation(PlayerStart->GetActorLocation(), PlayerStart->GetActorRotation());		
 	}
 }
 
