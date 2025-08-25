@@ -25,7 +25,10 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Materials)
 	UMaterialInterface* FlagMaterial;
 
+
 private:
+	UPROPERTY(Replicated)
+	bool bIsGrabbed;
 	UPROPERTY(ReplicatedUsing=OnRep_Color)
 	FLinearColor CurrentColor;
 	UPROPERTY()

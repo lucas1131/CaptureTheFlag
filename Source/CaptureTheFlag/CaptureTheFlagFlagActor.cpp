@@ -7,9 +7,12 @@
 #include "Components/SphereComponent.h"
 #include "Net/UnrealNetwork.h"
 
-ACaptureTheFlagFlagActor::ACaptureTheFlagFlagActor()
+ACaptureTheFlagFlagActor::ACaptureTheFlagFlagActor() : bIsGrabbed(false)
 {
 	PrimaryActorTick.bCanEverTick = true;
+
+	SetReplicates(true);
+	AActor::SetReplicateMovement(true);
 
 	Collision = CreateDefaultSubobject<USphereComponent>(TEXT("PickupCollision"));
 	Collision->InitSphereRadius(60.0f);
@@ -88,6 +91,7 @@ void ACaptureTheFlagFlagActor::OnDropped()
 {
 	SetFlagColor(EPlayerTeam::Spectator);
 	Collision->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
+	bIsGrabbed = false;
 }
 
 void ACaptureTheFlagFlagActor::GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLifetimeProps) const
@@ -100,6 +104,8 @@ void ACaptureTheFlagFlagActor::GetLifetimeReplicatedProps(TArray<class FLifetime
 void ACaptureTheFlagFlagActor::OnOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp,
                                          int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
+	if (bIsGrabbed) return;
+	
 	if (ACaptureTheFlagCharacter* Character = Cast<ACaptureTheFlagCharacter>(OtherActor))
 	{
 		const ACaptureTheFlagPlayerState* PlayerState = Character->GetPlayerState<ACaptureTheFlagPlayerState>();
@@ -107,6 +113,7 @@ void ACaptureTheFlagFlagActor::OnOverlap(UPrimitiveComponent* OverlappedComponen
 		{
 			const EPlayerTeam Team = PlayerState->GetTeam();
 			Character->GrabFlag(this);
+			bIsGrabbed = true;
 			Collision->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 			SetFlagColor(Team);
 		}

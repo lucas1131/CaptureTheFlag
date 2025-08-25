@@ -3,6 +3,7 @@
 
 #include "CaptureTheFlagPlayerState.generated.h"
 
+class UGameplayEffect;
 DECLARE_DELEGATE_OneParam(FOnPlayerNameChanged, const FString&);
 
 UENUM(BlueprintType)

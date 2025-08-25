@@ -11,6 +11,7 @@ public class CaptureTheFlag : ModuleRules
 		PrivateDependencyModuleNames.AddRange(new string[]
 		{
 			"GameplayAbilities",
+			"GameplayTags",
 		});
 
 		PublicDependencyModuleNames.AddRange(new string[]
