@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "GameplayEffect.h"
 #include "GameFramework/Actor.h"
 #include "CaptureTheFlagProjectile.generated.h"
 
@@ -28,6 +29,9 @@ private:
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Damage, meta = (AllowPrivateAccess = "true"))
 	int Damage;
+	
+	UPROPERTY()
+	TSubclassOf<UGameplayEffect> HitEffect;
 
 public:
 	ACaptureTheFlagProjectile();
@@ -40,5 +44,6 @@ public:
 	USphereComponent* GetCollisionComp() const { return CollisionComp; }
 	/** Returns ProjectileMovement subobject **/
 	UProjectileMovementComponent* GetProjectileMovement() const { return ProjectileMovement; }
+	void SetHitEffect(const TSubclassOf<UGameplayEffect>& InHitEffect) { HitEffect = InHitEffect; }
 };
 

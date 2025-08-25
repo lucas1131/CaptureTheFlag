@@ -51,11 +51,21 @@ void ACaptureTheFlagProjectile::OnHit(UPrimitiveComponent* HitComp, AActor* Othe
 	}
 
 	// If we hit player
-	if (ACaptureTheFlagCharacter* Character = Cast<ACaptureTheFlagCharacter>(OtherActor))
+	APawn* InstigatorActor = GetInstigator();
+	const IAbilitySystemInterface* HitActorAbilityActor = Cast<IAbilitySystemInterface>(OtherActor);
+	const IAbilitySystemInterface* InstigatorAbilityActor = Cast<IAbilitySystemInterface>(InstigatorActor);
+	if (HitActorAbilityActor && InstigatorAbilityActor)
 	{
-		// Character->TakeDamage(Damage, {}, this, this);
-		Destroy();
-		return;
+		UAbilitySystemComponent* HitASC = HitActorAbilityActor->GetAbilitySystemComponent();
+		UAbilitySystemComponent* InstigatorASC = InstigatorAbilityActor->GetAbilitySystemComponent();
+		if (HitASC && InstigatorASC)
+		{
+			FGameplayEffectContextHandle Context = InstigatorASC->MakeEffectContext();
+			Context.AddInstigator(InstigatorActor, InstigatorActor->GetController());
+			InstigatorASC->BP_ApplyGameplayEffectToTarget(HitEffect, HitASC, 1, Context);
+			Destroy();
+			return;
+		}
 	}
 
 	// Hitting anything else, just bounce

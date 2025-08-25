@@ -310,12 +310,9 @@ void ACaptureTheFlagCharacter::SetupPlayerInputComponent(UInputComponent* Player
 
 		// Looking
 		EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &ACaptureTheFlagCharacter::Look);
-		
+
 		// Fire
-		EnhancedInputComponent->BindActionValueLambda(FireAction, ETriggerEvent::Triggered, [this](const FInputActionValue& _)
-		{
-			AbilitySystem->TryActivateAbilityByClass(FireWeaponAbility, true);
-		});
+		EnhancedInputComponent->BindAction(FireAction, ETriggerEvent::Triggered, this, &ACaptureTheFlagCharacter::FireWeapon);
 	}
 	else
 	{
@@ -350,6 +347,11 @@ void ACaptureTheFlagCharacter::Look(const FInputActionValue& Value)
 		AddControllerYawInput(LookAxisVector.X);
 		AddControllerPitchInput(LookAxisVector.Y);
 	}
+}
+
+void ACaptureTheFlagCharacter::FireWeapon(const FInputActionValue& _)
+{
+	AbilitySystem->TryActivateAbility(FireWeaponAbility.Handle, true);
 }
 
 void ACaptureTheFlagCharacter::ApplyPlayerTint()

@@ -21,6 +21,13 @@ UCaptureTheFlagWeaponComponent::UCaptureTheFlagWeaponComponent()
 	MuzzleOffset = FVector(100.0f, 0.0f, 10.0f);
 }
 
+void UCaptureTheFlagWeaponComponent::BeginPlay()
+{
+	Super::BeginPlay();
+
+	HitEffectClass = HitEffectClassPtr.LoadSynchronous();
+}
+
 void UCaptureTheFlagWeaponComponent::FireVisuals() const
 {
 	if(!IsValid(Character)) return;
@@ -67,6 +74,7 @@ void UCaptureTheFlagWeaponComponent::Fire() const
 	
 		// Spawn the projectile at the muzzle
 		ACaptureTheFlagProjectile* Projectile = World->SpawnActor<ACaptureTheFlagProjectile>(ProjectileClass, SpawnLocation, SpawnRotation, ActorSpawnParams);
+		Projectile->SetInstigator(Character);
 		Projectile->SetHitEffect(HitEffectClass);
 	}
 }

@@ -68,7 +68,7 @@ class ACaptureTheFlagCharacter : public ACharacter, public IAbilitySystemInterfa
 	USpringArmComponent* FlagArm;
 
 private:
-	UPROPERTY()
+	UPROPERTY(Replicated)
 	ACaptureTheFlagFlagActor* GrabbedFlag;
 	UPROPERTY()
 	UMaterialInstanceDynamic* DynamicMesh1PMat;
@@ -80,7 +80,7 @@ private:
 	UPROPERTY(EditAnywhere, Category=Player, meta=(AllowPrivateAccess=true))
 	UWidgetComponent* PlayerNameWidget;
 
-	UPROPERTY()
+	UPROPERTY(BlueprintReadonly, meta=(AllowPrivateAccess=true))
 	UCaptureTheFlagWeaponComponent* WeaponComponent;
 
 	/* Abilities and attributes */
@@ -163,6 +163,7 @@ protected:
 
 	/** Called for looking input */
 	void Look(const FInputActionValue& Value);
+	void FireWeapon(const FInputActionValue& _);
 
 protected:
 	// APawn interface
