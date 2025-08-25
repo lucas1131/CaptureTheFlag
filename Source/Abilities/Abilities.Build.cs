@@ -22,6 +22,7 @@ public class Abilities : ModuleRules
                 "SlateCore", 
                 "GameplayAbilities", 
                 "GameplayTags", 
+                "GameplayTasks", 
                 "CaptureTheFlag"
             }
         );
