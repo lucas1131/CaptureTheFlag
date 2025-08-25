@@ -5,7 +5,6 @@
 #include "CoreMinimal.h"
 #include "AbilitySystemComponent.h"
 #include "AttributeSet.h"
-#include "GameplayEffectExecutionCalculation.h"
 #include "HealthAttributeSet.generated.h"
 
 #define ATTRIBUTE_ACCESSORS(ClassName, PropertyName) \
@@ -26,6 +25,11 @@ class CAPTURETHEFLAG_API UHealthAttributeSet : public UAttributeSet
 public:
 	FOnHealthChanged OnHealthChanged;
 	
+public:
+	UPROPERTY(VisibleAnywhere)
+	FGameplayAttributeData CalculatedDamage;
+	ATTRIBUTE_ACCESSORS(UHealthAttributeSet, CalculatedDamage)
+	
 private:
 	UPROPERTY(VisibleAnywhere, ReplicatedUsing=OnRep_Health)
 	FGameplayAttributeData Health = 100.0f;
@@ -34,10 +38,6 @@ private:
 	UPROPERTY(VisibleAnywhere, ReplicatedUsing=OnRep_MaxHealth)
 	FGameplayAttributeData MaxHealth = 100.0f;
 	ATTRIBUTE_ACCESSORS(UHealthAttributeSet, MaxHealth)
-	
-	UPROPERTY(VisibleAnywhere)
-	FGameplayAttributeData DamageHealth;
-	ATTRIBUTE_ACCESSORS(UHealthAttributeSet, DamageHealth)
 
 protected:
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;

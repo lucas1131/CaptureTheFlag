@@ -40,10 +40,12 @@ void UHealthAttributeSet::PostGameplayEffectExecute(const FGameplayEffectModCall
 {
 	Super::PostGameplayEffectExecute(Data);
 
-	if (Data.EvaluatedData.Attribute == GetDamageHealthAttribute())
+	// Only work on Calculated Damage, not base damage.
+	if (Data.EvaluatedData.Attribute == GetCalculatedDamageAttribute())
 	{
 		const float OldHealthValue = GetHealth();
-		const float NewHealthValue = FMath::Clamp(OldHealthValue - GetDamageHealth(), 0.0f, GetMaxHealth());
+		const float Damage = GetCalculatedDamage();
+		const float NewHealthValue = FMath::Clamp(OldHealthValue - Damage, 0.0f, GetMaxHealth());
 
 		if (OldHealthValue != NewHealthValue)
 		{
@@ -60,7 +62,7 @@ void UHealthAttributeSet::PostGameplayEffectExecute(const FGameplayEffectModCall
 			Data.Target.HandleGameplayEvent(EventData.EventTag, &EventData);
 		}
 
-		SetDamageHealth(0.0f);
+		SetCalculatedDamage(0.0f);
 	}
 }
 
