@@ -3,11 +3,10 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "CaptureTheFlagGameState.h"
-#include "GameplayTagContainer.h"
 #include "GameFramework/PlayerController.h"
 #include "CaptureTheFlagPlayerController.generated.h"
 
+struct FGameplayTag;
 class UCountdownWidget;
 class UMatchEndWidget;
 class UHUDWidget;

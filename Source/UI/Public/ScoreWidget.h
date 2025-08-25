@@ -4,7 +4,6 @@
 
 #include "CoreMinimal.h"
 #include "Blueprint/UserWidget.h"
-#include "CaptureTheFlag/CaptureTheFlagPlayerState.h"
 #include "ScoreWidget.generated.h"
 
 class UTextBlock;

@@ -19,7 +19,6 @@
 #include "Engine/LocalPlayer.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "GameplayEffectComponents/TargetTagsGameplayEffectComponent.h"
-#include "GeometryCollection/GeometryCollectionSimulationTypes.h"
 #include "Net/UnrealNetwork.h"
 
 DEFINE_LOG_CATEGORY(LogTemplateCharacter);

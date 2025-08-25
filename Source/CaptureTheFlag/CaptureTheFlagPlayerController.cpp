@@ -5,6 +5,7 @@
 #include "AbilitySystemComponent.h"
 #include "CaptureTheFlagCharacter.h"
 #include "CaptureTheFlagGameState.h"
+#include "CaptureTheFlagPlayerState.h"
 #include "CountdownWidget.h"
 #include "HUDWidget.h"
 #include "MatchEndWidget.h"

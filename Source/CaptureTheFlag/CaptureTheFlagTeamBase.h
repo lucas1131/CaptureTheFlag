@@ -1,8 +1,9 @@
 ﻿#pragma once
-#include "CaptureTheFlagPlayerState.h"
 #include "Components/SphereComponent.h"
 
 #include "CaptureTheFlagTeamBase.generated.h"
+
+enum class EPlayerTeam : uint8;
 
 UCLASS(Blueprintable, BlueprintType)
 class ACaptureTheFlagTeamBase : public AActor

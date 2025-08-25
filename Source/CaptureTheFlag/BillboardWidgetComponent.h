@@ -6,7 +6,6 @@
 #include "Components/WidgetComponent.h"
 #include "BillboardWidgetComponent.generated.h"
 
-
 UCLASS(MinimalAPI, meta=(BlueprintSpawnableComponent))
 class UBillboardWidgetComponent : public UWidgetComponent
 {

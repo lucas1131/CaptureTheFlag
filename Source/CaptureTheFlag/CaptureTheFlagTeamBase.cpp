@@ -3,6 +3,7 @@
 #include "CaptureTheFlagCharacter.h"
 #include "CaptureTheFlagGameMode.h"
 #include "CaptureTheFlagGameState.h"
+#include "CaptureTheFlagPlayerState.h"
 
 ACaptureTheFlagTeamBase::ACaptureTheFlagTeamBase(): Team(EPlayerTeam::Red)
 {

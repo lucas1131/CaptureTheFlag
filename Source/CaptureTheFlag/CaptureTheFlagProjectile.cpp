@@ -3,7 +3,6 @@
 #include "CaptureTheFlagProjectile.h"
 
 #include "CaptureTheFlagCharacter.h"
-#include "CaptureTheFlagPlayerState.h"
 #include "GameFramework/ProjectileMovementComponent.h"
 #include "Components/SphereComponent.h"
 
