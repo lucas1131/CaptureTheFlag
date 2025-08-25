@@ -68,6 +68,7 @@ void UCaptureTheFlagWeaponComponent::Fire() const
 			const ACaptureTheFlagProjectile* NewProjectile = Cast<ACaptureTheFlagProjectile>(NewActor);
 			NewProjectile->GetCollisionComp()->IgnoreActorWhenMoving(Character, true);
 			NewProjectile->GetCollisionComp()->IgnoreActorWhenMoving(GetOwner(), true);
+			NewProjectile->GetCollisionComp()->SetCollisionResponseToChannel(ECC_Pawn, ECR_Overlap);
 		};
 	
 		// Spawn the projectile at the muzzle
