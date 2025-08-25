@@ -33,6 +33,9 @@ private:
 	UPROPERTY(ReplicatedUsing=OnRep_SetWinState)
 	EMatchState WinState = EMatchState::None;
 
+	UPROPERTY(EditAnywhere)
+	TSubclassOf<UGameplayEffect> TeamTagEffect;
+
 public:
 	EPlayerTeam GetTeam() const { return Team; }
 	void SetTeam(const EPlayerTeam InTeam) { Team = InTeam; }
@@ -45,6 +48,7 @@ public:
 private:
 	void Win();
 	void Lose();
+	
 	UFUNCTION()
 	void OnRep_SetWinState();
 };

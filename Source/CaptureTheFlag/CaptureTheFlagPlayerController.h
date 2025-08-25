@@ -4,9 +4,11 @@
 
 #include "CoreMinimal.h"
 #include "CaptureTheFlagGameState.h"
+#include "GameplayTagContainer.h"
 #include "GameFramework/PlayerController.h"
 #include "CaptureTheFlagPlayerController.generated.h"
 
+class UCountdownWidget;
 class UMatchEndWidget;
 class UHUDWidget;
 
@@ -21,21 +23,32 @@ class CAPTURETHEFLAG_API ACaptureTheFlagPlayerController : public APlayerControl
 private:
 	UPROPERTY(EditDefaultsOnly, Category = UI)
 	TSubclassOf<UHUDWidget> HUDClass;
-
 	UPROPERTY()
 	UHUDWidget* HUDWidget;
 	
 	UPROPERTY(EditDefaultsOnly, Category = UI)
 	TSubclassOf<UMatchEndWidget> MatchEndWidgetClass;
-
 	UPROPERTY()
 	UMatchEndWidget* MatchEndWidget;
 	FTimerHandle CountdownHandle;
 	float MatchRestartTime;
 	float CurrentCountDown;
 
+	UPROPERTY(EditDefaultsOnly, Category = UI)
+	TSubclassOf<UCountdownWidget> RespawnCountdownWidgetClass;
+	UPROPERTY()
+	UCountdownWidget* RespawnCountdownWidget;
+
 protected:
 	virtual void BeginPlay() override;
+
+public:
+	UFUNCTION()
+	void ShowRespawnCountdown(FGameplayTag GameplayTag, int _) const;
+
+protected:
+	UFUNCTION(BlueprintImplementableEvent)
+	void OnTookDamage(float Damage);
 
 private:
 	void SetupMatchEndWidget() const;
@@ -47,9 +60,13 @@ private:
 	void TimerCountdown();
 
 	UFUNCTION()
-	void OnScoreChanged(int BlueTeamScore, int RedTeamScore);
+	void OnScoreChanged(int BlueTeamScore, int RedTeamScore) const;
 	UFUNCTION()
-	void OnMatchEnded(EPlayerTeam WinnerTeam, FLinearColor WinnerColor);
+	void OnMatchEnded(EPlayerTeam WinnerTeam, FLinearColor WinnerColor) const;
 	UFUNCTION()
 	void OnMatchReset() const;
+	UFUNCTION()
+	void OnRespawned(FGameplayTag GameplayTag, int NumTags) const;
+	UFUNCTION()
+	void OnHealthChanged(float OldHealth, float NewHealth);
 };

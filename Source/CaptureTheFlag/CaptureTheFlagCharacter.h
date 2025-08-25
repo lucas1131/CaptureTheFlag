@@ -4,13 +4,16 @@
 
 #include "CoreMinimal.h"
 #include "AbilitySystemComponent.h"
+#include "AbilitySystemInterface.h"
 #include "CaptureTheFlagFlagActor.h"
 #include "CaptureTheFlagWeaponComponent.h"
+#include "HealthAttributeSet.h"
 #include "GameFramework/Character.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "Logging/LogMacros.h"
 #include "CaptureTheFlagCharacter.generated.h"
 
+class UHealthAttributeSet;
 class UWidgetComponent;
 class UInputComponent;
 class USkeletalMeshComponent;
@@ -22,7 +25,7 @@ struct FInputActionValue;
 DECLARE_LOG_CATEGORY_EXTERN(LogTemplateCharacter, Log, All);
 
 UCLASS(MinimalAPI, config=Game)
-class ACaptureTheFlagCharacter : public ACharacter
+class ACaptureTheFlagCharacter : public ACharacter, public IAbilitySystemInterface
 {
 	GENERATED_BODY()
 
@@ -79,17 +82,32 @@ private:
 
 	UPROPERTY()
 	UCaptureTheFlagWeaponComponent* WeaponComponent;
-	UPROPERTY()
+
+	/* Abilities and attributes */
+	UPROPERTY(EditAnywhere, BlueprintReadonly, Category=Ability, meta=(AllowPrivateAccess=true))
 	UAbilitySystemComponent* AbilitySystem;
+	UPROPERTY(EditAnywhere, Category="Ability|Attributes")
+	UHealthAttributeSet* Attributes;
 
 	UPROPERTY(EditDefaultsOnly, Category=Ability)
 	TSoftClassPtr<UGameplayAbility> FireWeaponAbilityPtr;
-	TSubclassOf<UGameplayAbility> FireWeaponAbility;
+	FGameplayAbilitySpec FireWeaponAbility;
+
+	UPROPERTY(EditDefaultsOnly, Category=Ability)
+	TSoftClassPtr<UGameplayAbility> DeathAbilityPtr;
+	
+	UPROPERTY(EditDefaultsOnly, Category=Ability)
+	TSoftClassPtr<UGameplayAbility> RespawnAbilityPtr;
+	
+	UPROPERTY(EditAnywhere, Category="Ability|Attributes")
+	TSubclassOf<UGameplayEffect> InitAttributesEffectClass;
+	/* End Abilities and attributes */
 
 public:
 	ACaptureTheFlagCharacter();
 
 	virtual void BeginPlay() override;
+	virtual void PossessedBy(AController* NewController) override;
 
 	UFUNCTION(BlueprintCallable)
 	void GrabFlag(ACaptureTheFlagFlagActor* PickingFlag);
@@ -112,22 +130,32 @@ public:
 
 	void SetPlayerName(const FString& InName) const;
 
-	/* Abilities */
+	/* IAbilitySystemInterface */
+	virtual UAbilitySystemComponent* GetAbilitySystemComponent() const override { return AbilitySystem; }
+	/* End IAbilitySystemInterface */
+
+	/* Abilities and attributes */
 public:
-	void GrantPlayerAbilities(const TArray<TSubclassOf<UGameplayAbility>>& Abilities);
-	void GrantPlayerAbility(const TSubclassOf<UGameplayAbility>& Ability);
+	CAPTURETHEFLAG_API void InitializeCharacterAttributes() const;
+	void GrantPlayerAbilities(const TArray<FGameplayAbilitySpec>& Abilities);
+	void GrantPlayerAbility(const FGameplayAbilitySpec& Ability);
 	CAPTURETHEFLAG_API UCaptureTheFlagWeaponComponent* GetWeaponComponent() const { return WeaponComponent; }
+	CAPTURETHEFLAG_API FOnHealthChanged& GetOnHealthChangedEvent() const { return Attributes->OnHealthChanged;}
 
 private:
-	void GrantPlayerAbilityNotChecked(const TSubclassOf<UGameplayAbility>& Ability) const;
+	UFUNCTION(Server, Reliable)
+	void ServerInitializeCharacterAttributes() const;
+	void ServerInitializeCharacterAttributes_Implementation() const;
+	void GrantPlayerAbilityNotChecked(const FGameplayAbilitySpec& Ability) const;
 
 	UFUNCTION(Server, Reliable)
-	void ServerGrantPlayerAbilities(const TArray<TSubclassOf<UGameplayAbility>>& Abilities);
-	void ServerGrantPlayerAbilities_Implementation(const TArray<TSubclassOf<UGameplayAbility>>& Abilities);
+	void ServerGrantPlayerAbilities(const TArray<FGameplayAbilitySpec>& Abilities);
+	void ServerGrantPlayerAbilities_Implementation(const TArray<FGameplayAbilitySpec>& Abilities);
 
 	UFUNCTION(Server, Reliable)
-	void ServerGrantPlayerAbility(TSubclassOf<UGameplayAbility> Ability);
-	void ServerGrantPlayerAbility_Implementation(TSubclassOf<UGameplayAbility> Ability);
+	void ServerGrantPlayerAbility(const FGameplayAbilitySpec& Ability);
+	void ServerGrantPlayerAbility_Implementation(const FGameplayAbilitySpec& Ability);
+	/* End Abilities and attributes */
 
 protected:
 	/** Called for movement input */
@@ -150,6 +178,7 @@ public:
 	/** Returns FirstPersonCameraComponent subobject **/
 	UCameraComponent* GetFirstPersonCameraComponent() const { return FirstPersonCameraComponent; }
 
+	void SetupTeamTag(EPlayerTeam Team) const;
 private:
 	void ApplyPlayerTint();
 	

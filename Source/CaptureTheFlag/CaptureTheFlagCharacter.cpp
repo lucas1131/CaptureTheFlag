@@ -4,6 +4,8 @@
 
 #include "AbilitySystemComponent.h"
 #include "BillboardWidgetComponent.h"
+#include "CaptureTheFlagPlayerController.h"
+#include "HealthAttributeSet.h"
 #include "CaptureTheFlagPlayerState.h"
 #include "CaptureTheFlagWeaponComponent.h"
 #include "Camera/CameraComponent.h"
@@ -16,6 +18,8 @@
 #include "Components/WidgetComponent.h"
 #include "Engine/LocalPlayer.h"
 #include "GameFramework/SpringArmComponent.h"
+#include "GameplayEffectComponents/TargetTagsGameplayEffectComponent.h"
+#include "GeometryCollection/GeometryCollectionSimulationTypes.h"
 #include "Net/UnrealNetwork.h"
 
 DEFINE_LOG_CATEGORY(LogTemplateCharacter);
@@ -42,6 +46,11 @@ ACaptureTheFlagCharacter::ACaptureTheFlagCharacter()
 	Mesh1P->CastShadow = false;
 	Mesh1P->SetRelativeLocation(FVector(-30.f, 0.f, -150.f));
 
+	if (USkeletalMeshComponent* Mesh3P = GetMesh())
+	{
+		Mesh3P->SetIsReplicated(true);
+	}
+
 	FlagArm = CreateDefaultSubobject<USpringArmComponent>(TEXT("FlagArm"));
 	FlagArm->SetupAttachment(GetCapsuleComponent());
 	FlagArm->TargetArmLength = 200.0f;
@@ -55,8 +64,10 @@ ACaptureTheFlagCharacter::ACaptureTheFlagCharacter()
 	PlayerNameWidget->SetTintColorAndOpacity(PlayerTint);
 	PlayerNameWidget->SetWidgetClass(UPlayerNameWidget::StaticClass());
 
+	// Abilities and attributes
 	AbilitySystem = CreateDefaultSubobject<UAbilitySystemComponent>(TEXT("AbilitySystem"));
 	AbilitySystem->SetIsReplicated(true);
+	Attributes = CreateDefaultSubobject<UHealthAttributeSet>(TEXT("CharacterAttributes"));
 }
 
 void ACaptureTheFlagCharacter::BeginPlay()
@@ -76,11 +87,75 @@ void ACaptureTheFlagCharacter::BeginPlay()
 		}
 	}
 
-	FireWeaponAbility = TSubclassOf<UGameplayAbility>(FireWeaponAbilityPtr.LoadSynchronous());
-	GrantPlayerAbilities({FireWeaponAbility});
+	const ACaptureTheFlagPlayerState* CTFPlayerState = GetPlayerState<ACaptureTheFlagPlayerState>();
+	if (CTFPlayerState)
+	{
+		SetPlayerName(CTFPlayerState->GetPlayerName());
+	}
+	
+	if (IsValid(AbilitySystem))
+	{
+		InitializeCharacterAttributes();
 
-	const ACaptureTheFlagPlayerState* State = GetPlayerState<ACaptureTheFlagPlayerState>();
-	if (State) SetPlayerName(State->GetPlayerName());
+		// I don't like these Sync Loads here, at this point its very possible player is already in world and seeing something, this could cause visible stuttering
+		FireWeaponAbility = FGameplayAbilitySpec(FireWeaponAbilityPtr.LoadSynchronous());
+		GrantPlayerAbilities({
+			FireWeaponAbility,
+			FGameplayAbilitySpec(DeathAbilityPtr.LoadSynchronous()),
+			FGameplayAbilitySpec(RespawnAbilityPtr.LoadSynchronous()),
+		});
+
+		if (ACaptureTheFlagPlayerController* CTFPlayerController = Cast<ACaptureTheFlagPlayerController>(GetController()))
+		{
+			AbilitySystem
+				->RegisterGameplayTagEvent(FGameplayTag::RequestGameplayTag("Cooldown.Event.Death"))
+				.AddUObject(CTFPlayerController, &ACaptureTheFlagPlayerController::ShowRespawnCountdown);
+			
+		}
+	}
+
+	const FVector DeathCameraOffset = FirstPersonCameraComponent->GetForwardVector() * -50.0f + FirstPersonCameraComponent->GetUpVector() * 15.0f;
+	DeathCameraLocation = FirstPersonCameraComponent->GetRelativeLocation() + DeathCameraOffset;
+	CameraDefaultLocation = FirstPersonCameraComponent->GetRelativeLocation();
+}
+
+void ACaptureTheFlagCharacter::PossessedBy(AController* NewController)
+{
+	Super::PossessedBy(NewController);
+	AbilitySystem->InitAbilityActorInfo(NewController, this);
+}
+
+void ACaptureTheFlagCharacter::SetupTeamTag(const EPlayerTeam Team) const
+{
+	if (!HasAuthority()) return;
+
+	FGameplayTag TeamTag;
+	switch (Team)
+	{
+	case EPlayerTeam::Blue:
+		TeamTag = FGameplayTag::RequestGameplayTag("Character.Team.Blue");
+		break;
+	case EPlayerTeam::Red:
+		TeamTag = FGameplayTag::RequestGameplayTag("Character.Team.Red");
+		break;
+	case EPlayerTeam::Spectator:
+	default:
+		TeamTag = FGameplayTag::RequestGameplayTag("Character.Team.Spectator");
+		break;
+	}
+
+	// Create dummy effect to apply tag permanently
+	UGameplayEffect* ApplyTeamTagEffect = NewObject<UGameplayEffect>(GetTransientPackage(), FName("TeamTagEffect"));
+	ApplyTeamTagEffect->DurationPolicy = EGameplayEffectDurationType::Infinite;
+
+	// Add target tag component and add our selected tag to it
+	UTargetTagsGameplayEffectComponent& TagsComponent = ApplyTeamTagEffect->AddComponent<UTargetTagsGameplayEffectComponent>();
+	FInheritedTagContainer TagContainer = TagsComponent.GetConfiguredTargetTagChanges();
+	TagContainer.AddTag(TeamTag);
+	TagsComponent.SetAndApplyTargetTagChanges(TagContainer);
+
+	// Apply effect
+	AbilitySystem->ApplyGameplayEffectToSelf(ApplyTeamTagEffect, 1, AbilitySystem->MakeEffectContext());
 }
 
 void ACaptureTheFlagCharacter::GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLifetimeProps) const
@@ -131,20 +206,37 @@ void ACaptureTheFlagCharacter::SetPlayerName(const FString& InName) const
 			PlayerNameWidget->InitWidget();
 			Widget = Cast<UPlayerNameWidget>(PlayerNameWidget->GetWidget());
 		}
-		
+
 		Widget->SetPlayerName(InName);
 	}
 }
 
 //////////////////////////////////////////////////////////////////////////// Abilities
 
-void ACaptureTheFlagCharacter::GrantPlayerAbilities(const TArray<TSubclassOf<UGameplayAbility>>& Abilities)
+void ACaptureTheFlagCharacter::InitializeCharacterAttributes() const
+{
+	if (HasAuthority())
+	{
+		ServerInitializeCharacterAttributes_Implementation();
+	}
+	else
+	{
+		ServerInitializeCharacterAttributes();
+	}
+}
+
+void ACaptureTheFlagCharacter::ServerInitializeCharacterAttributes_Implementation() const
+{
+	AbilitySystem->BP_ApplyGameplayEffectToSelf(InitAttributesEffectClass, 1, AbilitySystem->MakeEffectContext());
+}
+
+void ACaptureTheFlagCharacter::GrantPlayerAbilities(const TArray<FGameplayAbilitySpec>& Abilities)
 {
 	if (IsValid(AbilitySystem))
 	{
 		if (HasAuthority())
 		{
-			for (const TSubclassOf<UGameplayAbility> Ability : Abilities)
+			for (const FGameplayAbilitySpec Ability : Abilities)
 			{
 				GrantPlayerAbilityNotChecked(Ability);
 			}
@@ -156,7 +248,7 @@ void ACaptureTheFlagCharacter::GrantPlayerAbilities(const TArray<TSubclassOf<UGa
 	}
 }
 
-void ACaptureTheFlagCharacter::GrantPlayerAbility(const TSubclassOf<UGameplayAbility>& Ability)
+void ACaptureTheFlagCharacter::GrantPlayerAbility(const FGameplayAbilitySpec& Ability)
 {
 	if (IsValid(AbilitySystem))
 	{
@@ -171,17 +263,17 @@ void ACaptureTheFlagCharacter::GrantPlayerAbility(const TSubclassOf<UGameplayAbi
 	}
 }
 
-void ACaptureTheFlagCharacter::GrantPlayerAbilityNotChecked(const TSubclassOf<UGameplayAbility>& Ability) const
+void ACaptureTheFlagCharacter::GrantPlayerAbilityNotChecked(const FGameplayAbilitySpec& Ability) const
 {
-	AbilitySystem->K2_GiveAbility(Ability);
+	AbilitySystem->GiveAbility(Ability);
 }
 
-void ACaptureTheFlagCharacter::ServerGrantPlayerAbilities_Implementation(const TArray<TSubclassOf<UGameplayAbility>>& Abilities)
+void ACaptureTheFlagCharacter::ServerGrantPlayerAbilities_Implementation(const TArray<FGameplayAbilitySpec>& Abilities)
 {
 	GrantPlayerAbilities(Abilities);
 }
 
-void ACaptureTheFlagCharacter::ServerGrantPlayerAbility_Implementation(TSubclassOf<UGameplayAbility> Ability)
+void ACaptureTheFlagCharacter::ServerGrantPlayerAbility_Implementation(const FGameplayAbilitySpec& Ability)
 {
 	GrantPlayerAbility(Ability);
 }
@@ -195,7 +287,8 @@ void ACaptureTheFlagCharacter::NotifyControllerChanged()
 	// Add Input Mapping Context
 	if (APlayerController* PlayerController = Cast<APlayerController>(Controller))
 	{
-		if (UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(PlayerController->GetLocalPlayer()))
+		if (UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(
+			PlayerController->GetLocalPlayer()))
 		{
 			Subsystem->AddMappingContext(DefaultMappingContext, 0);
 			Subsystem->AddMappingContext(FireMappingContext, 1);
