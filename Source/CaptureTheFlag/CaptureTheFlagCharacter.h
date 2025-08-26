@@ -8,6 +8,7 @@
 #include "CaptureTheFlagFlagActor.h"
 #include "CaptureTheFlagWeaponComponent.h"
 #include "HealthAttributeSet.h"
+#include "Camera/CameraComponent.h"
 #include "GameFramework/Character.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "Logging/LogMacros.h"
@@ -114,6 +115,9 @@ public:
 
 	virtual void BeginPlay() override;
 	virtual void PossessedBy(AController* NewController) override;
+
+	UFUNCTION(BlueprintCallable)
+	UCameraComponent* GetPlayerCamera() const { return FirstPersonCameraComponent; }
 
 	UFUNCTION(BlueprintCallable)
 	void GrabFlag(ACaptureTheFlagFlagActor* PickingFlag);

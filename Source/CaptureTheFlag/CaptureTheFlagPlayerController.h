@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Camera/CameraComponent.h"
 #include "GameFramework/PlayerController.h"
 #include "CaptureTheFlagPlayerController.generated.h"
 
@@ -37,6 +38,12 @@ private:
 	TSubclassOf<UCountdownWidget> RespawnCountdownWidgetClass;
 	UPROPERTY()
 	UCountdownWidget* RespawnCountdownWidget;
+	
+	UPROPERTY(EditDefaultsOnly, Category = Effects)
+	TSubclassOf<UCameraShakeBase> CameraShakeClass;
+
+	UPROPERTY(EditDefaultsOnly, Category = Effects)
+	float VignetteInterpolationSpeed;
 
 protected:
 	virtual void BeginPlay() override;
@@ -44,6 +51,7 @@ protected:
 public:
 	UFUNCTION()
 	void ShowRespawnCountdown(FGameplayTag GameplayTag, int _) const;
+	void PlayEffects(UCameraComponent* Camera);
 
 protected:
 	UFUNCTION(BlueprintNativeEvent)

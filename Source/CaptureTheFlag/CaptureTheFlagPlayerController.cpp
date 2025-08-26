@@ -10,6 +10,7 @@
 #include "HUDWidget.h"
 #include "MatchEndWidget.h"
 #include "Blueprint/UserWidget.h"
+#include "Camera/CameraComponent.h"
 #include "GameFramework/Character.h"
 
 void ACaptureTheFlagPlayerController::BeginPlay()
@@ -70,6 +71,53 @@ void ACaptureTheFlagPlayerController::ShowRespawnCountdown(FGameplayTag Gameplay
 	if (IsValid(RespawnCountdownWidget))
 	{
 		RespawnCountdownWidget->SetVisibility(ESlateVisibility::Visible);
+	}
+}
+
+void ACaptureTheFlagPlayerController::PlayEffects(UCameraComponent* Camera)
+{
+	PlayerCameraManager->StartCameraShake(CameraShakeClass, 1.0f, ECameraShakePlaySpace::CameraLocal);
+
+	// This should probably be on a  custom camera component for the game
+	// As I know my vignette is the only effect here, just going to access it directly.
+	Camera->PostProcessSettings.WeightedBlendables.Array[0].Weight = 1.0f;
+
+	FTimerHandle Handle;
+	GetWorld()
+		->GetTimerManager()
+		.SetTimer(Handle,
+		          FTimerDelegate::CreateLambda([this, &Handle, Camera]()
+		          {
+			          float Weight = Camera->PostProcessSettings.WeightedBlendables.Array[0].Weight;
+			          VignetteInterpolationSpeed = 1.0f;
+			          Weight = FMath::FInterpTo(Weight, 0.0f, 0.01f, VignetteInterpolationSpeed);
+
+			          if (Weight <= UE_KINDA_SMALL_NUMBER)
+			          {
+				          Weight = 0.0f;
+				          GetWorld()->GetTimerManager().ClearTimer(Handle);
+			          }
+			          Camera->PostProcessSettings.WeightedBlendables.Array[0].Weight = Weight;
+		          }),
+		          0.01f,
+		          true);
+}
+
+void ACaptureTheFlagPlayerController::OnTookDamage_Implementation(float OldHealth, float NewHealth)
+{
+	const ACaptureTheFlagCharacter* CTFCharacter = Cast<ACaptureTheFlagCharacter>(GetCharacter());
+	if (IsValid(CTFCharacter))
+	{
+		if (IsValid(HUDWidget))
+		{
+			HUDWidget->SetHealthBarPercentage(NewHealth / CTFCharacter->GetMaxHealth());
+		}
+
+		UCameraComponent* Camera = CTFCharacter->GetPlayerCamera();
+		if (IsLocalController() && Camera)
+		{
+			PlayEffects(Camera);
+		}
 	}
 }
 
