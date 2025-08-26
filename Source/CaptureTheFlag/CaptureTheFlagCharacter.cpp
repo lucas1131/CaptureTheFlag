@@ -65,7 +65,8 @@ ACaptureTheFlagCharacter::ACaptureTheFlagCharacter()
 	// Abilities and attributes
 	AbilitySystem = CreateDefaultSubobject<UAbilitySystemComponent>(TEXT("AbilitySystem"));
 	AbilitySystem->SetIsReplicated(true);
-	Attributes = CreateDefaultSubobject<UHealthAttributeSet>(TEXT("CharacterAttributes"));
+	HealthAttribute = CreateDefaultSubobject<UHealthAttributeSet>(TEXT("HealthAttribute"));
+	MovementAttribute = CreateDefaultSubobject<UMovementAttribute>(TEXT("MovementAttributes"));
 }
 
 void ACaptureTheFlagCharacter::BeginPlay()
@@ -102,6 +103,10 @@ void ACaptureTheFlagCharacter::BeginPlay()
 			FGameplayAbilitySpec(DeathAbilityPtr.LoadSynchronous()),
 			FGameplayAbilitySpec(RespawnAbilityPtr.LoadSynchronous()),
 		});
+
+		AbilitySystem->RegisterGameplayTagEvent(
+			FGameplayTag::RequestGameplayTag("Character.State.HoldingFlag"), EGameplayTagEventType::NewOrRemoved)
+			.AddUObject(this, &ACaptureTheFlagCharacter::OnHoldingFlagStateChanged);
 	}
 
 	const FVector DeathCameraOffset = FirstPersonCameraComponent->GetForwardVector() * -50.0f + FirstPersonCameraComponent->GetUpVector() * 15.0f;
@@ -165,16 +170,19 @@ void ACaptureTheFlagCharacter::GrabFlag(ACaptureTheFlagFlagActor* PickingFlag)
 	                                                 false);
 	PickingFlag->AttachToComponent(FlagArm, SnapLocationOnly);
 	GrabbedFlag = PickingFlag;
+	IsHoldingFlagEffectHandle = AbilitySystem->BP_ApplyGameplayEffectToSelf(
+		HoldingFlagEffect, 1, AbilitySystem->MakeEffectContext());
 }
 
 void ACaptureTheFlagCharacter::DropFlag()
 {
-	if (IsValid(GrabbedFlag))
+	if (IsValid(GrabbedFlag) && IsHoldingFlagEffectHandle.IsValid())
 	{
 		GrabbedFlag->DetachFromActor(FDetachmentTransformRules::KeepWorldTransform);
 		GrabbedFlag->SetActorLocation(GetActorLocation());
 		GrabbedFlag->OnDropped();
 		GrabbedFlag = nullptr;
+		AbilitySystem->RemoveActiveGameplayEffect(IsHoldingFlagEffectHandle);
 	}
 }
 
@@ -185,6 +193,20 @@ void ACaptureTheFlagCharacter::ReleaseFlag()
 		GrabbedFlag->DetachFromActor(FDetachmentTransformRules::KeepWorldTransform);
 		GrabbedFlag->OnDropped();
 		GrabbedFlag = nullptr;
+		AbilitySystem->RemoveActiveGameplayEffect(IsHoldingFlagEffectHandle);
+	}
+}
+
+void ACaptureTheFlagCharacter::OnHoldingFlagStateChanged(FGameplayTag GameplayTag, int Count)
+{
+	if (Count > 0)
+	{
+		// New tag, started holding flag
+		
+	}
+	else
+	{
+		// No tag, dropped or released flag
 	}
 }
 
@@ -220,7 +242,6 @@ void ACaptureTheFlagCharacter::OnRep_SetIsRagdoll() const
 		WeaponComponent->SetOwnerNoSee(bIsRagdoll);
 	}
 }
-
 
 void ACaptureTheFlagCharacter::SetPlayerName(const FString& InName) const
 {
@@ -357,8 +378,8 @@ void ACaptureTheFlagCharacter::Move(const FInputActionValue& Value)
 	if (Controller != nullptr)
 	{
 		// add movement 
-		AddMovementInput(GetActorForwardVector(), MovementVector.Y);
-		AddMovementInput(GetActorRightVector(), MovementVector.X);
+		AddMovementInput(GetActorForwardVector() * MovementAttribute->GetSpeedMultiplier(), MovementVector.Y);
+		AddMovementInput(GetActorRightVector() * MovementAttribute->GetSpeedMultiplier(), MovementVector.X);
 	}
 }
 

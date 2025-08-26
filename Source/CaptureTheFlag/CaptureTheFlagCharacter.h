@@ -8,6 +8,7 @@
 #include "CaptureTheFlagFlagActor.h"
 #include "CaptureTheFlagWeaponComponent.h"
 #include "HealthAttributeSet.h"
+#include "MovementAttribute.h"
 #include "Camera/CameraComponent.h"
 #include "GameFramework/Character.h"
 #include "GameFramework/SpringArmComponent.h"
@@ -94,7 +95,9 @@ private:
 	UPROPERTY(EditAnywhere, BlueprintReadonly, Category=Ability, meta=(AllowPrivateAccess=true))
 	UAbilitySystemComponent* AbilitySystem;
 	UPROPERTY(EditAnywhere, Category="Ability|Attributes")
-	UHealthAttributeSet* Attributes;
+	UHealthAttributeSet* HealthAttribute;
+	UPROPERTY(EditAnywhere, Category="Ability|Attributes")
+	UMovementAttribute* MovementAttribute;
 
 	UPROPERTY(EditDefaultsOnly, Category=Ability)
 	TSoftClassPtr<UGameplayAbility> FireWeaponAbilityPtr;
@@ -108,6 +111,10 @@ private:
 	
 	UPROPERTY(EditAnywhere, Category="Ability|Attributes")
 	TSubclassOf<UGameplayEffect> InitAttributesEffectClass;
+	
+	UPROPERTY(EditAnywhere, Category="Ability|Effects")
+	TSubclassOf<UGameplayEffect> HoldingFlagEffect;
+	FActiveGameplayEffectHandle IsHoldingFlagEffectHandle;
 	/* End Abilities and attributes */
 
 public:
@@ -128,7 +135,10 @@ public:
 	UFUNCTION(BlueprintCallable)
 	CAPTURETHEFLAG_API bool IsHoldingFlag() const { return GrabbedFlag != nullptr; }
 	ACaptureTheFlagFlagActor* GetHeldFlag() const { return GrabbedFlag; }
+private:
+	void OnHoldingFlagStateChanged(FGameplayTag GameplayTag, int Count);
 
+public:
 	CAPTURETHEFLAG_API bool HasWeaponEquipped() const { return IsValid(WeaponComponent); }
 	
 	CAPTURETHEFLAG_API void SetRagdoll(const bool InbIsRagdoll)
@@ -140,7 +150,7 @@ public:
 		}
 	}
 
-	float GetMaxHealth() const { return Attributes->GetMaxHealth(); }
+	float GetMaxHealth() const { return HealthAttribute->GetMaxHealth(); }
 	
 private:
 	UFUNCTION()
@@ -166,7 +176,7 @@ public:
 	void GrantPlayerAbilities(const TArray<FGameplayAbilitySpec>& Abilities);
 	void GrantPlayerAbility(const FGameplayAbilitySpec& Ability);
 	CAPTURETHEFLAG_API UCaptureTheFlagWeaponComponent* GetWeaponComponent() const { return WeaponComponent; }
-	CAPTURETHEFLAG_API FOnHealthChanged& GetOnHealthChangedEvent() const { return Attributes->OnHealthChanged;}
+	CAPTURETHEFLAG_API FOnHealthChanged& GetOnHealthChangedEvent() const { return HealthAttribute->OnHealthChanged;}
 
 private:
 	UFUNCTION(Server, Reliable)

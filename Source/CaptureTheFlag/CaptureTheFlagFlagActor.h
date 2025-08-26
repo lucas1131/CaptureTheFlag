@@ -32,7 +32,7 @@ private:
 	UPROPERTY(ReplicatedUsing=OnRep_Color)
 	FLinearColor CurrentColor;
 	UPROPERTY()
-	class UMaterialInstanceDynamic* FlagMaterialInstance;
+	UMaterialInstanceDynamic* FlagMaterialInstance;
 	FVector StartingLocation;
 
 public:
@@ -42,7 +42,7 @@ public:
 	void SetFlagColor(EPlayerTeam Team);
 	void ResetFlag();
 	void OnDropped();
-	virtual void GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLifetimeProps) const override;
+	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
 private:
 	UFUNCTION()
