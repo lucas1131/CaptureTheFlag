@@ -136,7 +136,7 @@ public:
 	CAPTURETHEFLAG_API bool IsHoldingFlag() const { return GrabbedFlag != nullptr; }
 	ACaptureTheFlagFlagActor* GetHeldFlag() const { return GrabbedFlag; }
 private:
-	void OnHoldingFlagStateChanged(FGameplayTag GameplayTag, int Count);
+	void OnHoldingFlagStateChanged(FGameplayTag GameplayTag, int Count) const;
 
 public:
 	CAPTURETHEFLAG_API bool HasWeaponEquipped() const { return IsValid(WeaponComponent); }

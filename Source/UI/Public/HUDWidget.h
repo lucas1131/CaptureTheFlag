@@ -6,6 +6,7 @@
 #include "HealthWidget.h"
 #include "ScoreWidget.h"
 #include "Blueprint/UserWidget.h"
+#include "Components/Image.h"
 #include "HUDWidget.generated.h"
 
 enum class EPlayerTeam : uint8;
@@ -25,6 +26,9 @@ private:
 
 	UPROPERTY(meta=(BindWidget))
 	UHealthWidget* HealthWidget;
+	
+	UPROPERTY(meta=(BindWidget))
+	UImage* FlagIcon;
 
 public:
 	UFUNCTION(BlueprintCallable)
@@ -38,5 +42,7 @@ public:
 	void SetHealthBarBorderColor(const FLinearColor Color) const { HealthWidget->SetBorderColor(Color); }
 	UFUNCTION(BlueprintCallable)
 	void SetHealthBarVisibility(const ESlateVisibility InVisibility) const { HealthWidget->SetVisibility(InVisibility); }
-	
+
+	UFUNCTION(BlueprintCallable)
+	void ShowFlagIcon(const bool bShouldShow, const FLinearColor Tint=FLinearColor::White) const;
 };

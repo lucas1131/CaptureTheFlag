@@ -48,7 +48,7 @@ private:
 
 	UPROPERTY(EditDefaultsOnly, Category = Effects)
 	float VignetteInterpolationSpeed;
-	FTimerHandle VignetteEffectHandle;
+	mutable FTimerHandle VignetteEffectHandle;
 
 protected:
 	virtual void BeginPlay() override;
@@ -58,9 +58,13 @@ protected:
 public:
 	UFUNCTION()
 	void StartRespawnCountdown(UAbilitySystemComponent* ASC, const FGameplayEffectSpec& Effect, FActiveGameplayEffectHandle Handle) const;
+private:
 	void CountdownRespawnTime(float Duration) const;
-	void PlayEffects(UCameraComponent* Camera);
+
+public:
+	void PlayEffects(UCameraComponent* Camera) const;
 	void SetHealthBarPercentage(float Percentage) const;
+	UHUDWidget* GetHUDWidget() const { return HUDWidget; };
 
 protected:
 	UFUNCTION(BlueprintNativeEvent)

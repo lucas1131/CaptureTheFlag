@@ -19,7 +19,7 @@ void ACaptureTheFlagPlayerController::BeginPlay()
 
 	// No Setup for remote clients
 	if (!IsLocalController()) return;
-
+ 
 	const ACaptureTheFlagCharacter* PlayerCharacter = Cast<ACaptureTheFlagCharacter>(GetCharacter());
 
 	if (IsValid(HUDClass))
@@ -117,7 +117,7 @@ void ACaptureTheFlagPlayerController::CountdownRespawnTime(float Duration) const
 	RespawnCooldownElapsedTime += 0.1f;
 }
 
-void ACaptureTheFlagPlayerController::PlayEffects(UCameraComponent* Camera)
+void ACaptureTheFlagPlayerController::PlayEffects(UCameraComponent* Camera) const
 {
 	PlayerCameraManager->StartCameraShake(CameraShakeClass, 1.0f, ECameraShakePlaySpace::CameraLocal);
 
@@ -133,7 +133,6 @@ void ACaptureTheFlagPlayerController::PlayEffects(UCameraComponent* Camera)
 	const auto InterpolateVignetteCallback = FTimerDelegate::CreateLambda([this, Camera]()
 	{
 		float Weight = Camera->PostProcessSettings.WeightedBlendables.Array[0].Weight;
-		VignetteInterpolationSpeed = 1.0f;
 		Weight = FMath::FInterpTo(Weight, 0.0f, 0.01f, VignetteInterpolationSpeed);
 
 		if (Weight <= 0.01)
@@ -152,7 +151,7 @@ void ACaptureTheFlagPlayerController::PlayEffects(UCameraComponent* Camera)
 void ACaptureTheFlagPlayerController::SetHealthBarPercentage(const float Percentage) const
 {
 	HUDWidget->SetHealthBarPercentage(Percentage);
-}
+}  
 
 void ACaptureTheFlagPlayerController::OnTookDamage_Implementation(float OldHealth, float NewHealth)
 {

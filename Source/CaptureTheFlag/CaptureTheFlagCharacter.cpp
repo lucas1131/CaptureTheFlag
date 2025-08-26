@@ -4,6 +4,7 @@
 
 #include "AbilitySystemComponent.h"
 #include "BillboardWidgetComponent.h"
+#include "CaptureTheFlagPlayerController.h"
 #include "HealthAttributeSet.h"
 #include "CaptureTheFlagPlayerState.h"
 #include "CaptureTheFlagWeaponComponent.h"
@@ -12,6 +13,7 @@
 #include "Components/SkeletalMeshComponent.h"
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
+#include "HUDWidget.h"
 #include "InputActionValue.h"
 #include "PlayerNameWidget.h"
 #include "Components/WidgetComponent.h"
@@ -197,16 +199,23 @@ void ACaptureTheFlagCharacter::ReleaseFlag()
 	}
 }
 
-void ACaptureTheFlagCharacter::OnHoldingFlagStateChanged(FGameplayTag GameplayTag, int Count)
+void ACaptureTheFlagCharacter::OnHoldingFlagStateChanged(FGameplayTag GameplayTag, const int Count) const
 {
-	if (Count > 0)
+	if (const ACaptureTheFlagPlayerController* CTFController = GetController<ACaptureTheFlagPlayerController>())
 	{
-		// New tag, started holding flag
-		
-	}
-	else
-	{
-		// No tag, dropped or released flag
+		if (const UHUDWidget* HUDWidget = CTFController->GetHUDWidget())
+		{
+			if (Count > 0)
+			{
+				// New tag, started holding flag
+				HUDWidget->ShowFlagIcon(true, PlayerTint);
+			}
+			else
+			{
+				// No tag, dropped or released flag
+				HUDWidget->ShowFlagIcon(false);
+			}
+		}
 	}
 }
 
@@ -313,6 +322,7 @@ void ACaptureTheFlagCharacter::GrantPlayerAbility(const FGameplayAbilitySpec& Ab
 void ACaptureTheFlagCharacter::GrantPlayerAbilityNotChecked(const FGameplayAbilitySpec& Ability) const
 {
 	AbilitySystem->GiveAbility(Ability);
+	
 }
 
 void ACaptureTheFlagCharacter::ServerGrantPlayerAbilities_Implementation(const TArray<FGameplayAbilitySpec>& Abilities)
