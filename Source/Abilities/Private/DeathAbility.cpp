@@ -1,8 +1,9 @@
 ﻿#include "DeathAbility.h"
 
 #include "CaptureTheFlag/CaptureTheFlagCharacter.h"
+#include "CaptureTheFlag/CaptureTheFlagPlayerController.h"
 
-UDeathAbility::UDeathAbility(): DeathEventEffectClass(nullptr)
+UDeathAbility::UDeathAbility(): DeathEventEffectClass(nullptr), DeathCooldownEffectClass(nullptr)
 {
 	FAbilityTriggerData Trigger;
 	Trigger.TriggerTag = FGameplayTag::RequestGameplayTag(FName("Event.Death"));
@@ -34,4 +35,19 @@ void UDeathAbility::ActivateAbility(const FGameplayAbilitySpecHandle Handle,
 	}
 
 	EndAbility(Handle, ActorInfo, ActivationInfo, false, false);
+}
+
+void UDeathAbility::ApplyCooldown(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo,
+	const FGameplayAbilityActivationInfo ActivationInfo) const
+{
+	Super::ApplyCooldown(Handle, ActorInfo, ActivationInfo);
+
+	if (const ACaptureTheFlagPlayerController* PlayerController = Cast<ACaptureTheFlagPlayerController>(ActorInfo->PlayerController.Get()))
+	{
+		if (IsValid(DeathCooldownEffectClass))
+		{
+			const FActiveGameplayEffectHandle GEHandle = ActorInfo->AbilitySystemComponent->BP_ApplyGameplayEffectToSelf(
+				DeathCooldownEffectClass, 1, ActorInfo->AbilitySystemComponent->MakeEffectContext());
+		}
+	}
 }

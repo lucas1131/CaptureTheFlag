@@ -36,4 +36,7 @@ public:
 	void SetHealthBarFillColor(const FLinearColor Color) const { HealthWidget->SetFillColor(Color); }
 	UFUNCTION(BlueprintCallable)
 	void SetHealthBarBorderColor(const FLinearColor Color) const { HealthWidget->SetBorderColor(Color); }
+	UFUNCTION(BlueprintCallable)
+	void SetHealthBarVisibility(const ESlateVisibility InVisibility) const { HealthWidget->SetVisibility(InVisibility); }
+	
 };

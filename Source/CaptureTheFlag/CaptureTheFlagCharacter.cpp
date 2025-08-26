@@ -4,7 +4,6 @@
 
 #include "AbilitySystemComponent.h"
 #include "BillboardWidgetComponent.h"
-#include "CaptureTheFlagPlayerController.h"
 #include "HealthAttributeSet.h"
 #include "CaptureTheFlagPlayerState.h"
 #include "CaptureTheFlagWeaponComponent.h"
@@ -103,14 +102,6 @@ void ACaptureTheFlagCharacter::BeginPlay()
 			FGameplayAbilitySpec(DeathAbilityPtr.LoadSynchronous()),
 			FGameplayAbilitySpec(RespawnAbilityPtr.LoadSynchronous()),
 		});
-
-		if (ACaptureTheFlagPlayerController* CTFPlayerController = Cast<ACaptureTheFlagPlayerController>(GetController()))
-		{
-			AbilitySystem
-				->RegisterGameplayTagEvent(FGameplayTag::RequestGameplayTag("Cooldown.Event.Death"))
-				.AddUObject(CTFPlayerController, &ACaptureTheFlagPlayerController::ShowRespawnCountdown);
-			
-		}
 	}
 
 	const FVector DeathCameraOffset = FirstPersonCameraComponent->GetForwardVector() * -50.0f + FirstPersonCameraComponent->GetUpVector() * 15.0f;
@@ -163,6 +154,7 @@ void ACaptureTheFlagCharacter::GetLifetimeReplicatedProps(TArray<class FLifetime
 
 	DOREPLIFETIME(ACaptureTheFlagCharacter, PlayerTint);
 	DOREPLIFETIME(ACaptureTheFlagCharacter, bIsRagdoll);
+	DOREPLIFETIME(ACaptureTheFlagCharacter, GrabbedFlag);
 }
 
 void ACaptureTheFlagCharacter::GrabFlag(ACaptureTheFlagFlagActor* PickingFlag)

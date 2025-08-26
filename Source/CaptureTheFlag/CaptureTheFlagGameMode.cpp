@@ -223,10 +223,11 @@ void ACaptureTheFlagGameMode::ResetGameState(ACaptureTheFlagGameState* CTFGameSt
 	{
 		if (const ACaptureTheFlagPlayerState* CTFPlayerState = Cast<ACaptureTheFlagPlayerState>(PlayerState))
 		{
-			if (APawn* Pawn = PlayerState->GetPawn())
+			if (ACaptureTheFlagCharacter* CTFCharacter = Cast<ACaptureTheFlagCharacter>(PlayerState->GetPawn()))
 			{
 				const APlayerStart* PlayerStart = GetNextPlayerStartForTeam(CTFPlayerState->GetTeam());
-				Pawn->SetActorLocationAndRotation(PlayerStart->GetActorLocation(), PlayerStart->GetActorRotation());		
+				CTFCharacter->SetActorLocationAndRotation(PlayerStart->GetActorLocation(), PlayerStart->GetActorRotation());
+				CTFCharacter->InitializeCharacterAttributes();
 			}
 		}
 	}

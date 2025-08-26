@@ -34,7 +34,7 @@ void ACaptureTheFlagPlayerController::BeginPlay()
 		MatchEndWidget = CreateWidget<UMatchEndWidget>(this, MatchEndWidgetClass, FName("MatchEndWidget"));
 		MatchEndWidget->AddToViewport();
 		SetupMatchEndWidget();
-		MatchEndWidget->OnBannerAnimationFinished.BindUObject(this, &ACaptureTheFlagPlayerController::StartCountdown);
+		MatchEndWidget->OnBannerAnimationFinished.BindUObject(this, &ACaptureTheFlagPlayerController::StartMatchEndCountdown);
 	}
 
 	if (IsValid(RespawnCountdownWidgetClass))
@@ -45,9 +45,16 @@ void ACaptureTheFlagPlayerController::BeginPlay()
 			RespawnCountdownWidget->SetVisibility(ESlateVisibility::Hidden);
 			RespawnCountdownWidget->SetupAbilityComponent(PlayerCharacter->GetAbilitySystemComponent());
 			RespawnCountdownWidget->AddToViewport();
+
+			// Death triggered (respawn timer started)
 			PlayerCharacter
 				->GetAbilitySystemComponent()
-				->RegisterGameplayTagEvent(FGameplayTag::RequestGameplayTag("Cooldown.Event.Death"), EGameplayTagEventType::NewOrRemoved)
+				->OnActiveGameplayEffectAddedDelegateToSelf.AddUObject(this, &ACaptureTheFlagPlayerController::StartRespawnCountdown);
+
+			// Respawn triggered (tag removed)
+			PlayerCharacter
+				->GetAbilitySystemComponent()
+				->RegisterGameplayTagEvent(RespawnCooldownTag, EGameplayTagEventType::NewOrRemoved)
 				.AddUObject(this, &ACaptureTheFlagPlayerController::OnRespawned);
 		}
 	}
@@ -66,12 +73,48 @@ void ACaptureTheFlagPlayerController::BeginPlay()
 	}
 }
 
-void ACaptureTheFlagPlayerController::ShowRespawnCountdown(FGameplayTag GameplayTag, int _) const
+void ACaptureTheFlagPlayerController::OnRep_PlayerState()
 {
-	if (IsValid(RespawnCountdownWidget))
+	Super::OnRep_PlayerState();
+
+	HideHealthForSpectator();
+}
+
+void ACaptureTheFlagPlayerController::OnPossess(APawn* InPawn)
+{
+	Super::OnPossess(InPawn);
+}
+
+void ACaptureTheFlagPlayerController::StartRespawnCountdown(UAbilitySystemComponent* ASC, const FGameplayEffectSpec& Effect, FActiveGameplayEffectHandle Handle) const
+{
+	if (!IsValid(RespawnCountdownWidget) || !Effect.Def->GetGrantedTags().HasTag(RespawnCooldownTag)) return;
+
+	if (RespawnTimerHandle.IsValid())
 	{
-		RespawnCountdownWidget->SetVisibility(ESlateVisibility::Visible);
+		GetWorld()->GetTimerManager().ClearTimer(RespawnTimerHandle);
 	}
+
+	RespawnCountdownWidget->SetVisibility(ESlateVisibility::Visible);
+
+	float Duration = ASC->GetGameplayEffectDuration(Handle);
+	RespawnCooldownElapsedTime = 0;
+	GetWorld()
+		->GetTimerManager()
+		.SetTimer(RespawnTimerHandle, FTimerDelegate::CreateLambda([this, Duration]() { CountdownRespawnTime(Duration); }), 0.1f, true);
+}
+
+void ACaptureTheFlagPlayerController::CountdownRespawnTime(float Duration) const
+{
+	// Here I add 0.9 to make the cooldown visuals more natural. Instead of popping a 3 for one frame then counting from 2 > 1 > 0,
+	// This makes the countdown go to 3 > 2 > 1, which I believe feels more natural for players. Most people when counting down will go
+	// until 1 and stop, its just the programmer mindset that tends to go to 0.
+	const float RemainingTime = FMath::Max(Duration - RespawnCooldownElapsedTime, 1.0f) + 0.9f;
+	RespawnCountdownWidget->SetCooldown(RemainingTime);
+	if (RespawnCooldownElapsedTime >= Duration)
+	{
+		GetWorld()->GetTimerManager().ClearTimer(RespawnTimerHandle);
+	}
+	RespawnCooldownElapsedTime += 0.1f;
 }
 
 void ACaptureTheFlagPlayerController::PlayEffects(UCameraComponent* Camera)
@@ -82,25 +125,33 @@ void ACaptureTheFlagPlayerController::PlayEffects(UCameraComponent* Camera)
 	// As I know my vignette is the only effect here, just going to access it directly.
 	Camera->PostProcessSettings.WeightedBlendables.Array[0].Weight = 1.0f;
 
-	FTimerHandle Handle;
+	if (VignetteEffectHandle.IsValid())
+	{
+		GetWorld()->GetTimerManager().ClearTimer(VignetteEffectHandle);
+	}
+
+	const auto InterpolateVignetteCallback = FTimerDelegate::CreateLambda([this, Camera]()
+	{
+		float Weight = Camera->PostProcessSettings.WeightedBlendables.Array[0].Weight;
+		VignetteInterpolationSpeed = 1.0f;
+		Weight = FMath::FInterpTo(Weight, 0.0f, 0.01f, VignetteInterpolationSpeed);
+
+		if (Weight <= 0.01)
+		{
+			Weight = 0.0f;
+			GetWorld()->GetTimerManager().ClearTimer(VignetteEffectHandle);
+		}
+		Camera->PostProcessSettings.WeightedBlendables.Array[0].Weight = Weight;
+	});
+
 	GetWorld()
 		->GetTimerManager()
-		.SetTimer(Handle,
-		          FTimerDelegate::CreateLambda([this, &Handle, Camera]()
-		          {
-			          float Weight = Camera->PostProcessSettings.WeightedBlendables.Array[0].Weight;
-			          VignetteInterpolationSpeed = 1.0f;
-			          Weight = FMath::FInterpTo(Weight, 0.0f, 0.01f, VignetteInterpolationSpeed);
+		.SetTimer(VignetteEffectHandle, InterpolateVignetteCallback, 0.01f, true);
+}
 
-			          if (Weight <= UE_KINDA_SMALL_NUMBER)
-			          {
-				          Weight = 0.0f;
-				          GetWorld()->GetTimerManager().ClearTimer(Handle);
-			          }
-			          Camera->PostProcessSettings.WeightedBlendables.Array[0].Weight = Weight;
-		          }),
-		          0.01f,
-		          true);
+void ACaptureTheFlagPlayerController::SetHealthBarPercentage(const float Percentage) const
+{
+	HUDWidget->SetHealthBarPercentage(Percentage);
 }
 
 void ACaptureTheFlagPlayerController::OnTookDamage_Implementation(float OldHealth, float NewHealth)
@@ -110,7 +161,7 @@ void ACaptureTheFlagPlayerController::OnTookDamage_Implementation(float OldHealt
 	{
 		if (IsValid(HUDWidget))
 		{
-			HUDWidget->SetHealthBarPercentage(NewHealth / CTFCharacter->GetMaxHealth());
+			SetHealthBarPercentage(NewHealth / CTFCharacter->GetMaxHealth());
 		}
 
 		UCameraComponent* Camera = CTFCharacter->GetPlayerCamera();
@@ -136,23 +187,31 @@ void ACaptureTheFlagPlayerController::ResetMatchEndRestartCountdown() const
 	}
 }
 
-void ACaptureTheFlagPlayerController::StartCountdown()
+void ACaptureTheFlagPlayerController::HideHealthForSpectator() const
 {
-	if (IsValid(MatchEndWidget))
+	const ACaptureTheFlagPlayerState* CTFPlayerState = GetPlayerState<ACaptureTheFlagPlayerState>();
+	if (IsValid(HUDWidget) && IsValid(CTFPlayerState) && CTFPlayerState->GetTeam() == EPlayerTeam::Spectator)
 	{
-		MatchEndWidget->SetRestartVisibility(ESlateVisibility::Visible);
-		CurrentCountDown = MatchRestartTime;
-
-		GetWorld()
-			->GetTimerManager()
-			.SetTimer(CountdownHandle,
-			          FTimerDelegate::CreateUObject(this, &ACaptureTheFlagPlayerController::TimerCountdown),
-			          1000, // TODO check if this is in seconds or ms
-			          true);
+		HUDWidget->SetHealthBarVisibility(ESlateVisibility::Hidden);
 	}
 }
 
-void ACaptureTheFlagPlayerController::TimerCountdown()
+void ACaptureTheFlagPlayerController::StartMatchEndCountdown()
+{
+	if (!IsValid(MatchEndWidget)) return;
+	
+	MatchEndWidget->SetRestartVisibility(ESlateVisibility::Visible);
+	CurrentCountDown = MatchRestartTime;
+
+	GetWorld()
+		->GetTimerManager()
+		.SetTimer(CountdownHandle,
+		          FTimerDelegate::CreateUObject(this, &ACaptureTheFlagPlayerController::MatchResetTimerCountdown),
+		          1,
+		          true);
+}
+
+void ACaptureTheFlagPlayerController::MatchResetTimerCountdown()
 {
 	CurrentCountDown = FMath::Max(0, CurrentCountDown - 1);
 	const int TruncatedCountdown = (int)CurrentCountDown;
@@ -206,5 +265,13 @@ void ACaptureTheFlagPlayerController::OnHealthChanged(const float OldHealth, con
 	if (OldHealth > NewHealth)
 	{
 		OnTookDamage(OldHealth, NewHealth);
+	}
+	else // Healed or respawned
+	{
+		const ACaptureTheFlagCharacter* CTFCharacter = Cast<ACaptureTheFlagCharacter>(GetCharacter());
+		if (IsValid(HUDWidget) && IsValid(CTFCharacter))
+		{
+			SetHealthBarPercentage(NewHealth / CTFCharacter->GetMaxHealth());
+		}
 	}
 }

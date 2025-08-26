@@ -12,9 +12,11 @@ class UI_API UCountdownWidget : public UUserWidget
 private:
 	UPROPERTY()
 	UAbilitySystemComponent* AbilitySystem;
-	
+	float Time;
+
 public:
 	void SetupAbilityComponent(UAbilitySystemComponent* InASC) { AbilitySystem = InASC; }
+	void SetCooldown(float InTime);
 
 protected:
 	UFUNCTION(BlueprintCallable, BlueprintPure)

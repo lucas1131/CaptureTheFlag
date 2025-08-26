@@ -11,7 +11,7 @@ ACaptureTheFlagFlagActor::ACaptureTheFlagFlagActor() : bIsGrabbed(false)
 {
 	PrimaryActorTick.bCanEverTick = true;
 
-	SetReplicates(true);
+	bReplicates = true;
 	AActor::SetReplicateMovement(true);
 
 	Collision = CreateDefaultSubobject<USphereComponent>(TEXT("PickupCollision"));

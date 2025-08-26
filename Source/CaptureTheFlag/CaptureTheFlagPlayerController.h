@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "AbilitySystemComponent.h"
 #include "Camera/CameraComponent.h"
 #include "GameFramework/PlayerController.h"
 #include "CaptureTheFlagPlayerController.generated.h"
@@ -36,22 +37,30 @@ private:
 
 	UPROPERTY(EditDefaultsOnly, Category = UI)
 	TSubclassOf<UCountdownWidget> RespawnCountdownWidgetClass;
+	FGameplayTag RespawnCooldownTag = FGameplayTag::RequestGameplayTag("Cooldown.Event.Death");
 	UPROPERTY()
 	UCountdownWidget* RespawnCountdownWidget;
+	mutable FTimerHandle RespawnTimerHandle;
+	mutable float RespawnCooldownElapsedTime;
 	
 	UPROPERTY(EditDefaultsOnly, Category = Effects)
 	TSubclassOf<UCameraShakeBase> CameraShakeClass;
 
 	UPROPERTY(EditDefaultsOnly, Category = Effects)
 	float VignetteInterpolationSpeed;
+	FTimerHandle VignetteEffectHandle;
 
 protected:
 	virtual void BeginPlay() override;
+	virtual void OnRep_PlayerState() override;
+	virtual void OnPossess(APawn* InPawn) override;
 
 public:
 	UFUNCTION()
-	void ShowRespawnCountdown(FGameplayTag GameplayTag, int _) const;
+	void StartRespawnCountdown(UAbilitySystemComponent* ASC, const FGameplayEffectSpec& Effect, FActiveGameplayEffectHandle Handle) const;
+	void CountdownRespawnTime(float Duration) const;
 	void PlayEffects(UCameraComponent* Camera);
+	void SetHealthBarPercentage(float Percentage) const;
 
 protected:
 	UFUNCTION(BlueprintNativeEvent)
@@ -61,11 +70,12 @@ protected:
 private:
 	void SetupMatchEndWidget() const;
 	void ResetMatchEndRestartCountdown() const;
+	void HideHealthForSpectator() const;
 
 	UFUNCTION()
-	void StartCountdown();
+	void StartMatchEndCountdown();
 	UFUNCTION()
-	void TimerCountdown();
+	void MatchResetTimerCountdown();
 
 	UFUNCTION()
 	void OnScoreChanged(int BlueTeamScore, int RedTeamScore) const;
