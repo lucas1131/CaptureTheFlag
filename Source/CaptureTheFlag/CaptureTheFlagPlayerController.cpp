@@ -34,7 +34,7 @@ void ACaptureTheFlagPlayerController::BeginPlay()
 		MatchEndWidget = CreateWidget<UMatchEndWidget>(this, MatchEndWidgetClass, FName("MatchEndWidget"));
 		MatchEndWidget->AddToViewport();
 		SetupMatchEndWidget();
-		MatchEndWidget->OnBannerAnimationFinished.BindUObject(this, &ACaptureTheFlagPlayerController::StartMatchEndCountdown);
+		MatchEndWidget->OnBannerAnimationFinishedDelegate.BindUObject(this, &ACaptureTheFlagPlayerController::StartMatchEndCountdown);
 	}
 
 	if (IsValid(RespawnCountdownWidgetClass))
@@ -203,6 +203,7 @@ void ACaptureTheFlagPlayerController::StartMatchEndCountdown()
 	MatchEndWidget->SetRestartVisibility(ESlateVisibility::Visible);
 	CurrentCountDown = MatchRestartTime;
 
+	MatchEndWidget->SetRestartCountdown(CurrentCountDown);
 	GetWorld()
 		->GetTimerManager()
 		.SetTimer(CountdownHandle,
@@ -213,16 +214,13 @@ void ACaptureTheFlagPlayerController::StartMatchEndCountdown()
 
 void ACaptureTheFlagPlayerController::MatchResetTimerCountdown()
 {
-	CurrentCountDown = FMath::Max(0, CurrentCountDown - 1);
+	CurrentCountDown = FMath::Max(1, CurrentCountDown - 1);
 	const int TruncatedCountdown = (int)CurrentCountDown;
 	if (TruncatedCountdown <= 0)
 	{
-		if (IsValid(MatchEndWidget))
-		{
-			MatchEndWidget->SetRestartCountdown(TruncatedCountdown);
-		}
 		GetWorld()->GetTimerManager().ClearTimer(CountdownHandle);
 	}
+	MatchEndWidget->SetRestartCountdown(TruncatedCountdown);
 }
 
 void ACaptureTheFlagPlayerController::OnScoreChanged(const int BlueTeamScore, const int RedTeamScore) const

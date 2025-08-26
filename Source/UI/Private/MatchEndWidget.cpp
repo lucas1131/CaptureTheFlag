@@ -1,8 +1,22 @@
 ﻿// Fill out your copyright notice in the Description page of Project Settings.
 #include "MatchEndWidget.h"
 
+#include "Animation/WidgetAnimation.h"
 #include "Components/Border.h"
 #include "Components/TextBlock.h"
+
+void UMatchEndWidget::NativeConstruct()
+{
+	Super::NativeConstruct();
+
+	FWidgetAnimationDynamicEvent OnAnimationStart;
+	OnAnimationStart.BindDynamic(this, &UMatchEndWidget::OnBannerAnimationStarted);
+	BindToAnimationFinished(SlideWinnerBannerAnim, OnAnimationStart);
+	
+	FWidgetAnimationDynamicEvent OnAnimationEnd;
+	OnAnimationEnd.BindDynamic(this, &UMatchEndWidget::OnBannerAnimationEnded);
+	BindToAnimationFinished(SlideWinnerBannerAnim, OnAnimationEnd);
+}
 
 void UMatchEndWidget::SetRestartVisibility(const ESlateVisibility NewVisibility) const
 {
@@ -28,4 +42,16 @@ void UMatchEndWidget::SetupAndPlayBannerAnimation(const FString& WinnerTeamName,
 	WinnerBannerShadow->SetBrushColor(BannerColor);
 
 	PlayAnimation(SlideWinnerBannerAnim);
+}
+
+void UMatchEndWidget::OnBannerAnimationStarted()
+{
+	// ReSharper disable once CppExpressionWithoutSideEffects
+	OnBannerAnimationStartedDelegate.ExecuteIfBound();
+}
+
+void UMatchEndWidget::OnBannerAnimationEnded()
+{
+	// ReSharper disable once CppExpressionWithoutSideEffects
+	OnBannerAnimationFinishedDelegate.ExecuteIfBound();
 }

@@ -21,8 +21,8 @@ class UI_API UMatchEndWidget : public UUserWidget
 	GENERATED_BODY()
 
 public:
-	FOnBannerAnimationStarted OnBannerAnimationStarted;
-	FOnBannerAnimationFinished OnBannerAnimationFinished;
+	FOnBannerAnimationStarted OnBannerAnimationStartedDelegate;
+	FOnBannerAnimationFinished OnBannerAnimationFinishedDelegate;
 
 private:
 	UPROPERTY(EditAnywhere)
@@ -45,10 +45,17 @@ private:
 	UWidgetAnimation* SlideWinnerBannerAnim;
 
 public:
+	virtual void NativeConstruct() override;
 	UFUNCTION(BlueprintCallable)
 	void SetRestartVisibility(const ESlateVisibility NewVisibility) const;
 	UFUNCTION(BlueprintCallable)
 	void SetRestartCountdown(const int Seconds) const;
 	UFUNCTION(BlueprintCallable)
 	void SetupAndPlayBannerAnimation(const FString& WinnerTeamName, const FLinearColor& BannerColor);
+
+private:
+	UFUNCTION()
+	void OnBannerAnimationStarted();
+	UFUNCTION()
+	void OnBannerAnimationEnded();
 };

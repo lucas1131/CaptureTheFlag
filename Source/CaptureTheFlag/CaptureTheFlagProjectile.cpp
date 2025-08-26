@@ -8,7 +8,7 @@
 
 ACaptureTheFlagProjectile::ACaptureTheFlagProjectile()
 {
-	SetReplicates(true);
+	bReplicates = true;
 	AActor::SetReplicateMovement(true);
 
 	// Use a sphere as a simple collision representation
