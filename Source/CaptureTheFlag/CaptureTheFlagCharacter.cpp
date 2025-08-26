@@ -65,7 +65,7 @@ ACaptureTheFlagCharacter::ACaptureTheFlagCharacter()
 	// Abilities and attributes
 	AbilitySystem = CreateDefaultSubobject<UAbilitySystemComponent>(TEXT("AbilitySystem"));
 	AbilitySystem->SetIsReplicated(true);
-	HealthAttribute = CreateDefaultSubobject<UHealthAttributeSet>(TEXT("HealthAttribute"));
+	HealthAttribute = CreateDefaultSubobject<UHealthAttributeSet>(TEXT("CharacterAttributes"));
 	MovementAttribute = CreateDefaultSubobject<UMovementAttribute>(TEXT("MovementAttributes"));
 }
 

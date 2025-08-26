@@ -176,7 +176,7 @@ public:
 	void GrantPlayerAbilities(const TArray<FGameplayAbilitySpec>& Abilities);
 	void GrantPlayerAbility(const FGameplayAbilitySpec& Ability);
 	CAPTURETHEFLAG_API UCaptureTheFlagWeaponComponent* GetWeaponComponent() const { return WeaponComponent; }
-	CAPTURETHEFLAG_API FOnHealthChanged& GetOnHealthChangedEvent() const { return HealthAttribute->OnHealthChanged;}
+	CAPTURETHEFLAG_API FOnHealthChanged& GetOnHealthChangedEvent() const { return HealthAttribute->OnHealthChanged; }
 
 private:
 	UFUNCTION(Server, Reliable)
