@@ -99,6 +99,7 @@ void ACaptureTheFlagFlagActor::GetLifetimeReplicatedProps(TArray<class FLifetime
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
 	DOREPLIFETIME(ACaptureTheFlagFlagActor, CurrentColor);
+	DOREPLIFETIME(ACaptureTheFlagFlagActor, bIsGrabbed);
 }
 
 void ACaptureTheFlagFlagActor::OnOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp,

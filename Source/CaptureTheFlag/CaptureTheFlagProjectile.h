@@ -30,12 +30,20 @@ private:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Damage, meta = (AllowPrivateAccess = "true"))
 	int Damage;
 	
-	UPROPERTY()
+	UPROPERTY(Replicated)
 	TSubclassOf<UGameplayEffect> HitEffect;
 
 public:
 	ACaptureTheFlagProjectile();
+	void SetHitEffect(const TSubclassOf<UGameplayEffect>& InHitEffect) { HitEffect = InHitEffect; }
+	/** Returns CollisionComp subobject **/
+	USphereComponent* GetCollisionComp() const { return CollisionComp; }
+	/** Returns ProjectileMovement subobject **/
+	UProjectileMovementComponent* GetProjectileMovement() const { return ProjectileMovement; }
+
+private:
 	bool OnHitPlayer(AActor* OtherActor);
+	virtual void GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLifetimeProps) const override;
 
 	/** called when projectile hits something */
 	UFUNCTION()
@@ -43,10 +51,5 @@ public:
 	UFUNCTION()
 	void OnBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
 
-	/** Returns CollisionComp subobject **/
-	USphereComponent* GetCollisionComp() const { return CollisionComp; }
-	/** Returns ProjectileMovement subobject **/
-	UProjectileMovementComponent* GetProjectileMovement() const { return ProjectileMovement; }
-	void SetHitEffect(const TSubclassOf<UGameplayEffect>& InHitEffect) { HitEffect = InHitEffect; }
 };
 

@@ -5,6 +5,7 @@
 #include "CaptureTheFlagCharacter.h"
 #include "GameFramework/ProjectileMovementComponent.h"
 #include "Components/SphereComponent.h"
+#include "Net/UnrealNetwork.h"
 
 ACaptureTheFlagProjectile::ACaptureTheFlagProjectile()
 {
@@ -62,6 +63,13 @@ bool ACaptureTheFlagProjectile::OnHitPlayer(AActor* OtherActor)
 	}
 
 	return false;
+}
+
+void ACaptureTheFlagProjectile::GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	DOREPLIFETIME(ACaptureTheFlagProjectile, HitEffect);
 }
 
 void ACaptureTheFlagProjectile::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp,
