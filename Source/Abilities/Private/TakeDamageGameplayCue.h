@@ -4,13 +4,13 @@
 
 #include "CoreMinimal.h"
 #include "GameplayCueNotify_Static.h"
-#include "UTakeDamageGameplayCue.generated.h"
+#include "TakeDamageGameplayCue.generated.h"
 
 /**
  * 
  */
 UCLASS()
-class ABILITIES_API UUTakeDamageGameplayCue : public UGameplayCueNotify_Static
+class ABILITIES_API UTakeDamageGameplayCue : public UGameplayCueNotify_Static
 {
 	GENERATED_BODY()
 

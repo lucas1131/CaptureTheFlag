@@ -1,13 +1,13 @@
 ﻿// Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "UTakeDamageGameplayCue.h"
+#include "TakeDamageGameplayCue.h"
 
 #include "HUDWidget.h"
 #include "CaptureTheFlag/CaptureTheFlagCharacter.h"
 #include "CaptureTheFlag/CaptureTheFlagPlayerController.h"
 
-bool UUTakeDamageGameplayCue::OnActive_Implementation(AActor* MyTarget, const FGameplayCueParameters& Parameters) const
+bool UTakeDamageGameplayCue::OnActive_Implementation(AActor* MyTarget, const FGameplayCueParameters& Parameters) const
 {
 	float CurrentHealth = Parameters.NormalizedMagnitude;
 
