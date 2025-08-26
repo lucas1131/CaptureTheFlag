@@ -30,14 +30,15 @@ public:
 	FGameplayAttributeData CalculatedDamage;
 	ATTRIBUTE_ACCESSORS(UHealthAttributeSet, CalculatedDamage)
 	
+	UPROPERTY(VisibleAnywhere, ReplicatedUsing=OnRep_MaxHealth)
+	FGameplayAttributeData MaxHealth = 100.0f;
+	ATTRIBUTE_ACCESSORS(UHealthAttributeSet, MaxHealth)
+	
 private:
 	UPROPERTY(VisibleAnywhere, ReplicatedUsing=OnRep_Health)
 	FGameplayAttributeData Health = 100.0f;
 	ATTRIBUTE_ACCESSORS(UHealthAttributeSet, Health)
 
-	UPROPERTY(VisibleAnywhere, ReplicatedUsing=OnRep_MaxHealth)
-	FGameplayAttributeData MaxHealth = 100.0f;
-	ATTRIBUTE_ACCESSORS(UHealthAttributeSet, MaxHealth)
 
 protected:
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
