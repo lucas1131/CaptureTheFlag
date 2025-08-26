@@ -48,6 +48,7 @@ void ACaptureTheFlagTeamBase::OnOverlap(UPrimitiveComponent* OverlappedComponent
 	}
 }
 
+#if WITH_EDITOR
 void ACaptureTheFlagTeamBase::PostEditChangeProperty(struct FPropertyChangedEvent& Event)
 {
 	Super::PostEditChangeProperty(Event);
@@ -57,3 +58,4 @@ void ACaptureTheFlagTeamBase::PostEditChangeProperty(struct FPropertyChangedEven
 		Mesh->SetCustomDepthStencilValue(Team == EPlayerTeam::Red ? 0 : 1);
 	}
 }
+#endif
