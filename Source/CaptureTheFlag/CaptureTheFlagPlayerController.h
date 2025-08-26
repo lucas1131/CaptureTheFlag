@@ -46,8 +46,9 @@ public:
 	void ShowRespawnCountdown(FGameplayTag GameplayTag, int _) const;
 
 protected:
-	UFUNCTION(BlueprintImplementableEvent)
-	void OnTookDamage(float Damage);
+	UFUNCTION(BlueprintNativeEvent)
+	void OnTookDamage(float OldHealth, float NewHealth);
+	void OnTookDamage_Implementation(float OldHealth, float NewHealth);
 
 private:
 	void SetupMatchEndWidget() const;

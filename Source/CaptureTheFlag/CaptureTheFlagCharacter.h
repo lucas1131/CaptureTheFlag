@@ -134,7 +134,9 @@ public:
 		{
 			OnRep_SetIsRagdoll(); // Force rep on host 
 		}
-	};
+	}
+
+	float GetMaxHealth() const { return Attributes->GetMaxHealth(); }
 	
 private:
 	UFUNCTION()

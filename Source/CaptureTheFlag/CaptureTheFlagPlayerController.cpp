@@ -18,9 +18,9 @@ void ACaptureTheFlagPlayerController::BeginPlay()
 
 	// No Setup for remote clients
 	if (!IsLocalController()) return;
-	
+
 	const ACaptureTheFlagCharacter* PlayerCharacter = Cast<ACaptureTheFlagCharacter>(GetCharacter());
-	
+
 	if (IsValid(HUDClass))
 	{
 		HUDWidget = CreateWidget<UHUDWidget>(this, HUDClass, FName("HUD"));
@@ -157,6 +157,6 @@ void ACaptureTheFlagPlayerController::OnHealthChanged(const float OldHealth, con
 	// Took damage
 	if (OldHealth > NewHealth)
 	{
-		OnTookDamage(OldHealth - NewHealth);
+		OnTookDamage(OldHealth, NewHealth);
 	}
 }
