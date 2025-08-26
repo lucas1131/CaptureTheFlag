@@ -23,7 +23,8 @@ public class Abilities : ModuleRules
                 "GameplayAbilities", 
                 "GameplayTags", 
                 "GameplayTasks", 
-                "CaptureTheFlag"
+                "CaptureTheFlag",
+                "UI"
             }
         );
     }
