@@ -115,6 +115,9 @@ private:
 	UPROPERTY(EditAnywhere, Category="Ability|Effects")
 	TSubclassOf<UGameplayEffect> HoldingFlagEffect;
 	FActiveGameplayEffectHandle IsHoldingFlagEffectHandle;
+
+	UPROPERTY(EditAnywhere, Category="Ability|Effects")
+	TSubclassOf<UGameplayEffect> TeamTagEffect;
 	/* End Abilities and attributes */
 
 public:

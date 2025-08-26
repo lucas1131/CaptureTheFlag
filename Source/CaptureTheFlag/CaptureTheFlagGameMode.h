@@ -8,6 +8,7 @@
 #include "CaptureTheFlagGameMode.generated.h"
 
 enum class EPlayerTeam : uint8;
+class APlayerStart;
 
 USTRUCT(BlueprintType)
 struct FTeamPlayerData

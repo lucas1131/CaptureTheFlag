@@ -126,33 +126,28 @@ void ACaptureTheFlagCharacter::SetupTeamTag(const EPlayerTeam Team) const
 {
 	if (!HasAuthority()) return;
 
-	FGameplayTag TeamTag;
+	const FGameplayTag BlueTeamTag = FGameplayTag::RequestGameplayTag("Character.Team.Blue");
+	const FGameplayTag RedTeamTag = FGameplayTag::RequestGameplayTag("Character.Team.Red");
+	const FGameplayTag SpectatorTeamTag = FGameplayTag::RequestGameplayTag("Character.Team.Spectator");
+
+	const FGameplayEffectSpecHandle Handle = AbilitySystem->MakeOutgoingSpec(TeamTagEffect, 1.0f, AbilitySystem->MakeEffectContext());
+	FGameplayEffectSpec* Effect = Handle.Data.Get();
+
 	switch (Team)
 	{
 	case EPlayerTeam::Blue:
-		TeamTag = FGameplayTag::RequestGameplayTag("Character.Team.Blue");
+		Effect->DynamicGrantedTags.AddTag(BlueTeamTag);
 		break;
 	case EPlayerTeam::Red:
-		TeamTag = FGameplayTag::RequestGameplayTag("Character.Team.Red");
+		Effect->DynamicGrantedTags.AddTag(RedTeamTag);
 		break;
 	case EPlayerTeam::Spectator:
 	default:
-		TeamTag = FGameplayTag::RequestGameplayTag("Character.Team.Spectator");
+		Effect->DynamicGrantedTags.AddTag(SpectatorTeamTag);
 		break;
 	}
 
-	// Create dummy effect to apply tag permanently
-	UGameplayEffect* ApplyTeamTagEffect = NewObject<UGameplayEffect>(GetTransientPackage(), FName("TeamTagEffect"));
-	ApplyTeamTagEffect->DurationPolicy = EGameplayEffectDurationType::Infinite;
-
-	// Add target tag component and add our selected tag to it
-	UTargetTagsGameplayEffectComponent& TagsComponent = ApplyTeamTagEffect->AddComponent<UTargetTagsGameplayEffectComponent>();
-	FInheritedTagContainer TagContainer = TagsComponent.GetConfiguredTargetTagChanges();
-	TagContainer.AddTag(TeamTag);
-	TagsComponent.SetAndApplyTargetTagChanges(TagContainer);
-
-	// Apply effect
-	AbilitySystem->ApplyGameplayEffectToSelf(ApplyTeamTagEffect, 1, AbilitySystem->MakeEffectContext());
+	AbilitySystem->ApplyGameplayEffectSpecToSelf(*Effect);
 }
 
 void ACaptureTheFlagCharacter::GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLifetimeProps) const
