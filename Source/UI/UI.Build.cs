@@ -10,7 +10,6 @@ public class UI : ModuleRules
             new string[]
             {
                 "Core",
-                "CaptureTheFlag",
                 "UMG", 
             }
         );
