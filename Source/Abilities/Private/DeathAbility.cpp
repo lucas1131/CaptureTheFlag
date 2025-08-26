@@ -42,12 +42,9 @@ void UDeathAbility::ApplyCooldown(const FGameplayAbilitySpecHandle Handle, const
 {
 	Super::ApplyCooldown(Handle, ActorInfo, ActivationInfo);
 
-	if (const ACaptureTheFlagPlayerController* PlayerController = Cast<ACaptureTheFlagPlayerController>(ActorInfo->PlayerController.Get()))
+	if (IsValid(DeathCooldownEffectClass))
 	{
-		if (IsValid(DeathCooldownEffectClass))
-		{
-			const FActiveGameplayEffectHandle GEHandle = ActorInfo->AbilitySystemComponent->BP_ApplyGameplayEffectToSelf(
-				DeathCooldownEffectClass, 1, ActorInfo->AbilitySystemComponent->MakeEffectContext());
-		}
+		ActorInfo->AbilitySystemComponent->BP_ApplyGameplayEffectToSelf(
+			DeathCooldownEffectClass, 1, ActorInfo->AbilitySystemComponent->MakeEffectContext());
 	}
 }

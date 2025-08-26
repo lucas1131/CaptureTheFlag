@@ -31,7 +31,7 @@ private:
 	TSubclassOf<UMatchEndWidget> MatchEndWidgetClass;
 	UPROPERTY()
 	UMatchEndWidget* MatchEndWidget;
-	FTimerHandle CountdownHandle;
+	FTimerHandle MatchRestartCountdownHandle;
 	float MatchRestartTime;
 	float CurrentCountDown;
 
@@ -52,6 +52,7 @@ private:
 
 protected:
 	virtual void BeginPlay() override;
+	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 	virtual void OnRep_PlayerState() override;
 	virtual void OnPossess(APawn* InPawn) override;
 
