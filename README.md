@@ -32,14 +32,19 @@ I have some rough breakdown of what I did for (almost) every day.
 
 ## Known issues
 There are some issues that I know of:
+
 Critical:
 - There is a bug that I believe is related to projectile replication that causes a hard crash. I couldn't find the cause but the stack trace always come from garbage collector or networking serialization, so I have a hunch this has to do with either destroying an actor that's trying to replicate or some property might be overwritten with null and I couldn't find it.
+
 High priority:
 - I don't think my replication is perfectly configured because there's quite a bit of stuttering for client movement, and I understand that the CharacterMovementComponent should already be able to do prediction and reconciliation. But as this was only noticeable in packaged builds, I only notices this too late and I had hard crashes to fix.
 - There is no control for match start/reset to check for players' state, there is probably some bugs related to dying at the same time match resets or similar situations.
 - There is no main menu, to play the game it must be packaged as development/debug and ran with listen and open IP commands. I included 2 .bat files to make this simpler but it's certainly not ideal.
+
 Medium priority:
 - Health bar SDF has no control for aspect ratio, the consequence is that to make a rectangle, currently, you have to stretch the UVs
+- I started working on locomotion animation but eventually stopped to focus on more important things (refactoring gameplay with GAS) and this wound up being unused for now.
+
 Low priority:
 - Weapon has shadow but character does not.
 - There is a strong relation between color and team, probably because I got kind of stuck in the Red/Blue teams, but after a while I realized I should have just made the logic with Team A/B and always assign Blue for player's own team and Red for the enemies'. This would reduce logic and corner cases to handle coloring, could be done fully client side and I think it's a better design, most people already associate red with enemy. 
