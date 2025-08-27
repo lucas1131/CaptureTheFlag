@@ -30,7 +30,18 @@ public:
 	/** Gun muzzle's offset from the characters location */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category=Gameplay)
 	FVector MuzzleOffset;
+	
+private:
+	/** The Character holding this weapon*/
+	UPROPERTY()
+	ACaptureTheFlagCharacter* Character;
 
+	UPROPERTY(EditAnywhere, Category=Gameplay)
+	TSoftClassPtr<UGameplayEffect> HitEffectClassPtr;
+	UPROPERTY()
+	TSubclassOf<UGameplayEffect> HitEffectClass;
+
+public:
 	/** Sets default values for this component's properties */
 	UCaptureTheFlagWeaponComponent();
 	virtual void BeginPlay() override;
@@ -42,13 +53,4 @@ public:
 	
 	/** Make the weapon Fire a Projectile */
 	void Fire() const;
-
-private:
-	/** The Character holding this weapon*/
-	UPROPERTY()
-	ACaptureTheFlagCharacter* Character;
-
-	UPROPERTY(EditAnywhere, Category=Gameplay)
-	TSoftClassPtr<UGameplayEffect> HitEffectClassPtr;
-	TSubclassOf<UGameplayEffect> HitEffectClass;
 };
