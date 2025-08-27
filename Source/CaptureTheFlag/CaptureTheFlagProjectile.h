@@ -27,9 +27,9 @@ private:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Movement, meta = (AllowPrivateAccess = "true"))
 	int Bounces;
 	
-	UPROPERTY(Replicated)
+	UPROPERTY()
 	TSubclassOf<UGameplayEffect> HitEffect;
-
+	
 public:
 	ACaptureTheFlagProjectile();
 	void SetHitEffect(const TSubclassOf<UGameplayEffect>& InHitEffect) { HitEffect = InHitEffect; }
@@ -40,7 +40,6 @@ public:
 
 private:
 	bool OnHitPlayer(AActor* OtherActor);
-	virtual void GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLifetimeProps) const override;
 
 	/** called when projectile hits something */
 	UFUNCTION()

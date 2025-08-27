@@ -43,11 +43,12 @@ ACaptureTheFlagProjectile::ACaptureTheFlagProjectile()
 
 bool ACaptureTheFlagProjectile::OnHitPlayer(AActor* OtherActor)
 {
-	if (!IsValid(HitEffect))
+	if (!IsValid(HitEffect) || !HasAuthority())
 	{
 		ServerDestroy();
 		return true;
 	}
+	
 	// If we hit player
 	APawn* InstigatorActor = GetInstigator();
 	const IAbilitySystemInterface* HitActorAbilityActor = Cast<IAbilitySystemInterface>(OtherActor);
@@ -58,7 +59,6 @@ bool ACaptureTheFlagProjectile::OnHitPlayer(AActor* OtherActor)
 		UAbilitySystemComponent* InstigatorASC = InstigatorAbilityActor->GetAbilitySystemComponent();
 		if (HitASC && InstigatorASC)
 		{
-
 			if (IsValid(HitEffect))
 			{
 				FGameplayEffectContextHandle Context = InstigatorASC->MakeEffectContext();
@@ -77,14 +77,6 @@ bool ACaptureTheFlagProjectile::OnHitPlayer(AActor* OtherActor)
 
 	return false;
 }
-
-void ACaptureTheFlagProjectile::GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLifetimeProps) const
-{
-	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
-
-	DOREPLIFETIME(ACaptureTheFlagProjectile, HitEffect);
-}
-
 void ACaptureTheFlagProjectile::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp,
                                       FVector NormalImpulse, const FHitResult& Hit)
 {
