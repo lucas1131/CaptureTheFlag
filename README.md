@@ -33,10 +33,9 @@ I have some rough breakdown of what I did for (almost) every day.
 ## Known issues
 There are some issues that I know of:
 
-Critical:
-- There is a bug that I believe is related to projectile replication that causes a hard crash. I couldn't find the cause but the stack trace always come from garbage collector or networking serialization, so I have a hunch this has to do with either destroying an actor that's trying to replicate or some property might be overwritten with null and I couldn't find it. (I found a last-minute crash that could be related to this, just maybe, hoping it is because I don't have more time to test)
-
 High priority:
+- ~~There is a bug that I believe is related to projectile replication that causes a hard crash. I couldn't find the cause but the stack trace always come from garbage collector or networking serialization, so I have a hunch this has to do with either destroying an actor that's trying to replicate or some property might be overwritten with null and I couldn't find it.~~ 
+	- The last ditch attempt to fix this at least resolves the crash but it isn't ideal. Currently, if the projectile tries to spawn inside another player, it just do nothing, but at least no crash. 
 - I don't think my replication is perfectly configured because there's quite a bit of stuttering for client movement, and I understand that the CharacterMovementComponent should already be able to do prediction and reconciliation. But as this was only noticeable in packaged builds, I only notices this too late and I had hard crashes to fix.
 - There is no control for match start/reset to check for players' state, there is probably some bugs related to dying at the same time match resets or similar situations.
 - There is no main menu, to play the game it must be packaged as development/debug and ran with listen and open IP commands. I included 2 .bat files to make this simpler but it's certainly not ideal.
@@ -44,6 +43,7 @@ High priority:
 Medium priority:
 - Health bar SDF has no control for aspect ratio, the consequence is that to make a rectangle, currently, you have to stretch the UVs
 - I started working on locomotion animation but eventually stopped to focus on more important things (refactoring gameplay with GAS) and this wound up being unused for now.
+- If the flag drops in a place where the character may collect it from inside their own base, the score won't count until another overlap occurs. Ideally, the game should check for base on grabbing the flag as well.
 
 Low priority:
 - Weapon has shadow but character does not.
