@@ -21,8 +21,6 @@ public class UI : ModuleRules
                 "Engine",
                 "Slate",
                 "SlateCore",
-                "GameplayAbilities",
-                "GameplayTags",
             }
         );
     }

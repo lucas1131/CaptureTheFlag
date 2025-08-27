@@ -43,7 +43,6 @@ void ACaptureTheFlagPlayerController::BeginPlay()
 		{
 			RespawnCountdownWidget = CreateWidget<UCountdownWidget>(this, RespawnCountdownWidgetClass, FName("RespawnWidget"));
 			RespawnCountdownWidget->SetVisibility(ESlateVisibility::Hidden);
-			RespawnCountdownWidget->SetupAbilityComponent(PlayerCharacter->GetAbilitySystemComponent());
 			RespawnCountdownWidget->AddToViewport();
 
 			// Death triggered (respawn timer started)
