@@ -6,6 +6,7 @@ Simple multiplayer CTF gameplay using Unreal 5.5 and GAS.
 I decided to use listen server because when I was trying to setup dedicated server, I discovered that the engine distributed directly from the store didn't include server build support, and I didn't want to waste more time on setup. So instead I just went with listen server that is just there, even though this creates exception cases for the host all the time.
 
 This was also my first time using the Gameplay Ability System (GAS), so I had a lot of learning to do. As for networking, I have worked in multiplayer in Unity using EntitasECS to handle replication and protobuffs for RPCs, and, in Unreal, I have once worked in a small project to try and learn a bit about Unreal's networking, but it was a lot simpler.
+And this being my first experience with GAS, I decided to first implement the mechanics as I would without it, also to avoid refactoring the template too early before I really understood how it's all setup. After I had my core mechanics working, I started refactoring them, one by one, into the GAS way. This helped ensure I had the core mechanics working regardless of whether I managed to learn GAS. I think this is a nice incremental way of working when learning something new.  
 
 Except for the flag icon (<a href="https://www.flaticon.com/free-icons/flag" title="flag icons">Flag icons created by Smashicons - Flaticon</a>), all assets I used were from either one of the other templates or the starter content or procedurally made by me (UI materials basically).
 
@@ -20,6 +21,14 @@ I wanted to add some flavors and comeback chances, so I made that the player hol
 ## Timeline
 I had 7 days to work on this project. The first day I didn't do much coding, I spent my time setupping the environment and studying the templates and documentation for networking mostly.
 From the second day onwards I was working for about 5-6 hours a day, for 6 days, totalling somewhere close to 32h of work on this, which is about 4 days of full time 8h work.
+
+I have some rough breakdown of what I did for (almost) every day.
+- The first day I mostly did setup and some research/learning into what I wanted to do.
+- Days 2-3: working on the gameplay CTF mechanics, animations, setupping characters for 3rd person view, networking and UI.
+- Day 4: gameplay debugging and polishing, started to learn GAS. 
+- Day 5: learning about GAS, reading docs, following tutorials and testing some things. Here I started converting what I already had into a more GAS-style way of doing things.
+- Day 6: implementing more abilities and effects in GAS, there were a few hiccups, but it all worked eventually. When I finished all core implementation, I built the project and to focus exclusively on bugs (specially in packaged builds)
+- Day 7: bug fixing the entire day, and some polishing.
 
 ## Known issues
 There are some issues that I know of:
@@ -39,6 +48,8 @@ Low priority:
 
 The two biggest issues for me is the hard crash that I couldn't fix in time and the movement replication issue, as I strongly believe that player control should be the top priority in responsiveness. Aside from these issues, I'm quite happy with all I learned about GAS, even if I didn't manage to implement many different features or effects.
 Also, I hate listen servers and all their corner cases, it's a lot simpler to work with dedicated server, if I already had that setup.
+
+One of the biggest issues was actually the changed APIs. I am using unreal 5.5 and there's a lot of API changes for both the engine, and, **especially** GAS since 5.3. This caused me a lot of trouble when reading documentations and tutorials that didn't match what I had. 
 
 ## Requirements
 - [x] Multiplayer (either listen or dedicated server)
