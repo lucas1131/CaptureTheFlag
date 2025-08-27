@@ -74,7 +74,15 @@ void UCaptureTheFlagWeaponComponent::Fire() const
 		// Spawn the projectile at the muzzle
 		ACaptureTheFlagProjectile* Projectile = World->SpawnActor<ACaptureTheFlagProjectile>(ProjectileClass, SpawnLocation, SpawnRotation, ActorSpawnParams);
 		Projectile->SetInstigator(Character);
-		Projectile->SetHitEffect(HitEffectClass);
+		if (IsValid(HitEffectClass))
+		{
+			Projectile->SetHitEffect(HitEffectClass);
+		}
+		else
+		{
+			UE_LOG(LogTemp, Warning, TEXT("Weapon trying to set null HitEffect to projectile"));
+			GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("Weapon trying to set null HitEffect to projectile"));
+		}
 	}
 }
 

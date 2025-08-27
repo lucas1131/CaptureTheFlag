@@ -39,11 +39,15 @@ ACaptureTheFlagProjectile::ACaptureTheFlagProjectile()
 	InitialLifeSpan = 3.0f;
 
 	Bounces = 3;
-	Damage = 1;
 }
 
 bool ACaptureTheFlagProjectile::OnHitPlayer(AActor* OtherActor)
 {
+	if (!IsValid(HitEffect))
+	{
+		ServerDestroy();
+		return true;
+	}
 	// If we hit player
 	APawn* InstigatorActor = GetInstigator();
 	const IAbilitySystemInterface* HitActorAbilityActor = Cast<IAbilitySystemInterface>(OtherActor);
@@ -54,10 +58,19 @@ bool ACaptureTheFlagProjectile::OnHitPlayer(AActor* OtherActor)
 		UAbilitySystemComponent* InstigatorASC = InstigatorAbilityActor->GetAbilitySystemComponent();
 		if (HitASC && InstigatorASC)
 		{
-			FGameplayEffectContextHandle Context = InstigatorASC->MakeEffectContext();
-			Context.AddInstigator(InstigatorActor, InstigatorActor->GetController());
-			InstigatorASC->BP_ApplyGameplayEffectToTarget(HitEffect, HitASC, 1, Context);
-			Destroy();
+
+			if (IsValid(HitEffect))
+			{
+				FGameplayEffectContextHandle Context = InstigatorASC->MakeEffectContext();
+				Context.AddInstigator(InstigatorActor, InstigatorActor->GetController());
+				InstigatorASC->BP_ApplyGameplayEffectToTarget(HitEffect, HitASC, 1, Context);
+			}
+			else
+			{
+				UE_LOG(LogTemp, Warning, TEXT("Invalid hit effect to apply! doing nothing..."));
+				GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("Invalid hit effect to apply!"));
+			}
+			ServerDestroy();
 			return true;
 		}
 	}
@@ -84,7 +97,7 @@ void ACaptureTheFlagProjectile::OnHit(UPrimitiveComponent* HitComp, AActor* Othe
 	if ((OtherActor != nullptr) && (OtherComp != nullptr) && OtherComp->IsSimulatingPhysics())
 	{
 		OtherComp->AddImpulseAtLocation(GetVelocity() * 100.0f, GetActorLocation());
-		Destroy();
+		ServerDestroy();
 		return;
 	}
 
@@ -96,7 +109,7 @@ void ACaptureTheFlagProjectile::OnHit(UPrimitiveComponent* HitComp, AActor* Othe
 	// Hitting anything else, just bounce
 	if (Bounces-- <= 0)
 	{
-		Destroy();
+		ServerDestroy();
 	}
 }
 
@@ -110,3 +123,11 @@ void ACaptureTheFlagProjectile::OnBeginOverlap(UPrimitiveComponent* OverlappedCo
 
 	OnHitPlayer(OtherActor);
 }
+void ACaptureTheFlagProjectile::ServerDestroy()
+{
+	if (HasAuthority())
+	{
+		Destroy();
+	}
+}
+
